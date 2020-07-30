@@ -1,9 +1,13 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const path = require('path')
+// const defaultSettings = require('./src/settings') // eslint-disable-line @typescript-eslint/no-var-requires
 
 // If your port is set to 80,
 // use administrator privileges to execute the command line.
 // For example, on Mac: sudo npm run / sudo yarn
+// const devServerPort = defaultSettings.devServerPort // 9527 // TODO: get this variable from setting.ts
+// const mockServerPort = defaultSettings.mockServerPort// 9528 // TODO: get this variable from setting.ts
+// const name = defaultSettings.title // 'Vue Typescript Admin' // TODO: get this variable from setting.ts
 const devServerPort = 9527 // TODO: get this variable from setting.ts
 const mockServerPort = 9528 // TODO: get this variable from setting.ts
 const name = 'Vue Typescript Admin' // TODO: get this variable from setting.ts
@@ -23,8 +27,10 @@ module.exports = {
     proxy: {
       // change xxx-api/login => /mock-api/v1/login
       // detail: https://cli.vuejs.org/config/#devserver-proxy
+      // change xxx-api/v?/yyy => /api/v?/yyy
+      // request({urls: 'v1/yyy'}) => /api/v1/yyy
       [process.env.VUE_APP_BASE_API]: {
-        target: `http://localhost:${mockServerPort}/mock-api/v1`,
+        target: `http://localhost:${mockServerPort}/api`,
         changeOrigin: true, // needed for virtual hosted sites
         ws: true, // proxy websockets
         pathRewrite: {
