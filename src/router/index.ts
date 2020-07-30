@@ -75,8 +75,18 @@ export const constantRoutes: RouteConfig[] = [
   {
     path: '/',
     component: Layout,
-    redirect: '/dashboard',
+    redirect: '/home',
     children: [
+      {
+        path: 'home',
+        component: () => import(/* webpackChunkName: "home" */ '@/views/home/index.vue'),
+        name: 'Home',
+        meta: {
+          title: 'home',
+          icon: 'dashboard',
+          affix: true
+        }
+      },
       {
         path: 'dashboard',
         component: () => import(/* webpackChunkName: "dashboard" */ '@/views/dashboard/index.vue'),

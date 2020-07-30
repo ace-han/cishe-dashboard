@@ -63,10 +63,10 @@ module.exports = {
     // https://webpack.js.org/configuration/devtool/#development
     // Change development env source map if you want.
     // The default in vue-cli is 'eval-cheap-module-source-map'.
-    // config
-    //   .when(process.env.NODE_ENV === 'development',
-    //     config => config.devtool('eval-cheap-source-map')
-    //   )
+    config
+      .when(process.env.NODE_ENV === 'development',
+        config => config.devtool('eval-source-map')
+      )
 
     config
       .when(process.env.NODE_ENV !== 'development',
