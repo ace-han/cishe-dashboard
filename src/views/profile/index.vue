@@ -51,14 +51,12 @@ import UserCard from './components/UserCard.vue'
 export interface IProfile {
   name: string
   email: string
-  avatar: string
   roles: string
 }
 
 const defaultProfile: IProfile = {
   name: 'Loading...',
   email: 'Loading...',
-  avatar: 'Loading...',
   roles: 'Loading...'
 }
 
@@ -76,15 +74,11 @@ export default class extends Vue {
   private activeTab = 'activity'
 
   get name() {
-    return UserModule.name
+    return UserModule.username
   }
 
   get email() {
     return UserModule.email
-  }
-
-  get avatar() {
-    return UserModule.avatar
   }
 
   get roles() {
@@ -99,7 +93,6 @@ export default class extends Vue {
     this.user = {
       name: this.name,
       email: this.email,
-      avatar: this.avatar,
       roles: this.roles.join(' | ')
     }
   }

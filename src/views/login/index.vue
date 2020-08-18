@@ -131,8 +131,8 @@ export default class extends Vue {
   }
 
   private validatePassword = (rule: any, value: string, callback: Function) => {
-    if (value.length < 6) {
-      callback(new Error('The password can not be less than 6 digits'))
+    if (value.length < 3) {
+      callback(new Error('The password can not be less than 3 digits'))
     } else {
       callback()
     }
@@ -140,7 +140,7 @@ export default class extends Vue {
 
   private loginForm = {
     username: 'admin',
-    password: '111111'
+    password: 'admin'
   }
 
   private loginRules = {

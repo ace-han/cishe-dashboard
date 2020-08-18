@@ -107,10 +107,6 @@ export default class extends Vue {
     return AppModule.device.toString()
   }
 
-  get avatar() {
-    return UserModule.avatar
-  }
-
   private toggleSideBar() {
     AppModule.ToggleSideBar(false)
   }
