@@ -21,14 +21,13 @@ const getPageTitle = (key: string) => {
   return `${settings.title}`
 }
 
-router.beforeEach(async(to: Route, _: Route, next: any) => {
+router.beforeEach((to: Route, from: Route, next: any) => {
   // Start progress bar
   NProgress.start()
-  
-  // TODO modify here for the navigation
 
   // Determine whether the user has logged in
-  if (UserModule.username) {
+  // using `non-http cookie solution`
+  if (UserModule.hasLoggedIn) {
     if (to.path === '/login') {
       // If is logged in, redirect to the home page
       next({ path: '/' })
@@ -36,9 +35,7 @@ router.beforeEach(async(to: Route, _: Route, next: any) => {
     } else {
       // Check whether the user has obtained his permission roles
       if (UserModule.roles.length === 0) {
-        try {
-          // Note: roles must be a object array! such as: ['admin'] or ['developer', 'editor']
-          await UserModule.GetUserInfo()
+        UserModule.GetUserInfo().then(() => {
           const roles = UserModule.roles
           // Generate accessible routes map based on role
           PermissionModule.GenerateRoutes(roles)
@@ -46,14 +43,18 @@ router.beforeEach(async(to: Route, _: Route, next: any) => {
           router.addRoutes(PermissionModule.dynamicRoutes)
           // Hack: ensure addRoutes is complete
           // Set the replace: true, so the navigation will not leave a history record
+
+          // next() // not gonna work as it's not going through the newly GeneratedRoutes
+          // below form of `next` will abort the current navigation and a new one will be started
+          // then it would go through the newly generated routes
           next({ ...to, replace: true })
-        } catch (err) {
+        }).catch((err) => {
           // Remove token and redirect to login page
-          UserModule.RefreshToken()
+          UserModule.RESET()
           Message.error(err || 'Has Error')
-          next(`/login?redirect=${to.path}`)
+          next(`/login?redirect=${to.fullPath}`)
           NProgress.done()
-        }
+        })
       } else {
         next()
       }
@@ -65,7 +66,7 @@ router.beforeEach(async(to: Route, _: Route, next: any) => {
       next()
     } else {
       // Other pages that do not have permission to access are redirected to the login page.
-      next(`/login?redirect=${to.path}`)
+      next(`/login?redirect=${to.fullPath}`)
       NProgress.done()
     }
   }

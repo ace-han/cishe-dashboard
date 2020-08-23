@@ -32,13 +32,9 @@ export interface ITransactionData {
 }
 
 export interface IUserData {
-  id: number
+  id?: number
   username: string
-  password: string
-  name: string
+  password?: string
   email: string
-  phone: string
-  avatar: string
-  introduction: string
   roles: string[]
 }
