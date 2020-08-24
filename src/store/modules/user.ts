@@ -4,7 +4,7 @@ import router, { resetRouter } from '@/router'
 import { PermissionModule } from './permission'
 import { TagsViewModule } from './tags-view'
 import store from '@/store'
-import { getLoggedIn, setLoggedIn } from '@/utils/cookies'
+import { getLoggedIn } from '@/utils/cookies'
 import { getUserInfo } from '@/api/users'
 import { IUserData } from '@/api/types'
 
@@ -12,8 +12,6 @@ export interface IUserState {
   username: string
   email: string
   roles: string[]
-  // this line has to be defined here!!!
-  hasLoggedIn: boolean
 }
 
 @Module({ dynamic: true, store, name: 'user' })
@@ -22,10 +20,12 @@ class User extends VuexModule implements IUserState {
   public email = ''
   public roles: string[] = []
 
-  get hasLoggedIn(): boolean {
-    const result = (getLoggedIn() || '').toLowerCase() === 'true'
-    return result
-  }
+  // public hasLoggedIn(): boolean {
+  //   // it won't work !!!
+  //   // getters are based on pre-defined fields of its own `state`
+  //   const result = (getLoggedIn() || '').toLowerCase() === 'true'
+  //   return result
+  // }
 
   @Mutation
   private SET_USERNAME(username: string) {
@@ -42,13 +42,6 @@ class User extends VuexModule implements IUserState {
     this.roles = roles
   }
 
-  // @Mutation
-  // private SET_LOGGED_IN() {
-  //   const loggedIn = getLoggedIn()
-  //   setLoggedIn(loggedIn as string)
-  //   this.hasLoggedIn = getLoggedIn()
-  // }
-
   @Mutation
   public RESET() {
     resetRouter()
@@ -57,7 +50,6 @@ class User extends VuexModule implements IUserState {
     this.username = ('')
     this.email = ''
     this.roles = []
-    // setLoggedIn('')
   }
 
   @Action
@@ -65,7 +57,6 @@ class User extends VuexModule implements IUserState {
     let { username, password } = userInfo
     username = username.trim()
     await login({ username, password })
-    // this.context.commit('SET_LOGGED_IN')
   }
 
   @Action
@@ -108,4 +99,14 @@ class User extends VuexModule implements IUserState {
   }
 }
 
+// add hasLoggedIn function signature...
+interface User {
+  hasLoggedIn(): boolean
+}
+
 export const UserModule = getModule(User)
+
+UserModule.hasLoggedIn = (): boolean => {
+  const result = (getLoggedIn() || '').toLowerCase() === 'true'
+  return result
+}

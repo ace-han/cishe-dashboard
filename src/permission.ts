@@ -27,7 +27,7 @@ router.beforeEach((to: Route, from: Route, next: any) => {
 
   // Determine whether the user has logged in
   // using `non-http cookie solution`
-  if (UserModule.hasLoggedIn) {
+  if (UserModule.hasLoggedIn()) {
     if (to.path === '/login') {
       // If is logged in, redirect to the home page
       next({ path: '/' })

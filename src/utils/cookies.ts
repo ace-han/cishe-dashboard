@@ -16,7 +16,6 @@ export const setSize = (size: string) => Cookies.set(sizeKey, size)
 // User
 const loggedInKey = 'loggedIn'
 export const getLoggedIn = () => Cookies.get(loggedInKey)
-export const setLoggedIn = (loggedIn: string) => Cookies.set(loggedInKey, loggedIn)
 
 const csrftokenKey = 'csrftoken'
 export const getCsrfToken = () => Cookies.get(csrftokenKey)
