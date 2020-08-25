@@ -51,7 +51,8 @@ router.beforeEach((to: Route, from: Route, next: any) => {
         }).catch((err) => {
           // Remove token and redirect to login page
           UserModule.RESET()
-          Message.error(err || 'Has Error')
+          const errMsg = err ? err.toString() : 'router.beforeRoute Unknown Error'
+          Message.error(errMsg)
           next(`/login?redirect=${to.fullPath}`)
           NProgress.done()
         })
