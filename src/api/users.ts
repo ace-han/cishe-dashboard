@@ -1,26 +1,31 @@
-import request from '@/utils/request'
+import requestService from '@/utils/request'
+import { IUserData } from './types'
 
 export const getUsers = (params: any) =>
-  request({
+  requestService({
     url: '/users',
     method: 'get',
     params
   })
 
-export const getUserInfo = () => {
-  return request({
-    url: '/fev1/account/users/current-user-info/',
-    method: 'get'
-  }).then((data) => {
-    console.info('getUserInfo, data: ', data)
-    const user = data as any
-    user.roles = user.groups
-    return user
+export const getUserInfo = (): Promise<IUserData> => {
+  return requestService.get<IUserData>('/fev1/account/users/current-user-info/', {
+    params: {
+      expand: 'groups'
+    }
+  }).then(({ data }) => {
+    // don't do anything about the interceptor in request.response
+    // console.info('getUserInfo, data: ', data)
+    data.roles = []
+    for (const group of data.groups) {
+      data.roles.push(group.name)
+    }
+    return data
   })
 }
 
 export const getUserByName = (username: string) =>
-  request({
+  requestService({
     url: `/users/${username}`,
     method: 'get'
   })

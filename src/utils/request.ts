@@ -1,6 +1,7 @@
 import axios from 'axios'
-import { Message, MessageBox } from 'element-ui'
-import { UserModule } from '@/store/modules/user'
+import { Message } from 'element-ui'
+// import { Message, MessageBox } from 'element-ui'
+// import { UserModule } from '@/store/modules/user'
 
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
@@ -58,7 +59,7 @@ service.interceptors.response.use(
     // } else {
     //   return response.data
     // }
-    return response.data
+    return response
   },
   (error) => {
     Message({

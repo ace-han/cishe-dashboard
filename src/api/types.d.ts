@@ -31,10 +31,16 @@ export interface ITransactionData {
   status: string
 }
 
+export interface IUserGroupData {
+  id?: number
+  name: string
+}
+
 export interface IUserData {
   id?: number
   username: string
   password?: string
   email: string
-  roles: string[]
+  roles: string[] // usually pop from groups
+  groups: IUserGroupData[]
 }

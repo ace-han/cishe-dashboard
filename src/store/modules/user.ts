@@ -6,7 +6,6 @@ import { TagsViewModule } from './tags-view'
 import store from '@/store'
 import { getLoggedIn } from '@/utils/cookies'
 import { getUserInfo } from '@/api/users'
-import { IUserData } from '@/api/types'
 
 export interface IUserState {
   username: string
@@ -47,7 +46,7 @@ class User extends VuexModule implements IUserState {
     resetRouter()
     // Reset visited views and cached views
     TagsViewModule.delAllViews()
-    this.username = ('')
+    this.username = ''
     this.email = ''
     this.roles = []
   }
@@ -67,7 +66,7 @@ class User extends VuexModule implements IUserState {
   @Action
   public async GetUserInfo() {
     const data = await getUserInfo()
-    const { username, email, roles } = data as unknown as IUserData
+    const { username, email, roles } = data
 
     if (!roles.length) {
       roles.push('visitor')
