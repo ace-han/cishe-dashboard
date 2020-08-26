@@ -4,7 +4,7 @@ import router, { resetRouter } from '@/router'
 import { PermissionModule } from './permission'
 import { TagsViewModule } from './tags-view'
 import store from '@/store'
-import { getLoggedIn } from '@/utils/cookies'
+import { getLoggedIn, resetLoggedIn } from '@/utils/cookies'
 import { getUserInfo } from '@/api/users'
 
 export interface IUserState {
@@ -46,6 +46,7 @@ class User extends VuexModule implements IUserState {
     resetRouter()
     // Reset visited views and cached views
     TagsViewModule.delAllViews()
+    resetLoggedIn()
     this.username = ''
     this.email = ''
     this.roles = []
