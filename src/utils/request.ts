@@ -1,13 +1,95 @@
-import axios from 'axios'
-import { Message } from 'element-ui'
-// import { Message, MessageBox } from 'element-ui'
-// import { UserModule } from '@/store/modules/user'
+import axios, { AxiosError, AxiosResponse } from 'axios'
+import { Message, MessageBox } from 'element-ui'
+import router from '@/router'
+import { UserModule } from '@/store/modules/user'
 
+export interface DrfApiErrorData {
+  detail: string
+  code?: string
+}
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
+  xsrfCookieName: 'csrftoken',
+  xsrfHeaderName: 'X-CSRFTOKEN',
   timeout: 5000
   // withCredentials: true // send cookies when cross-domain requests
 })
+
+interface RefreshCallback {
+  (okOnRefreshed: boolean): void
+}
+
+let isRefreshing = false
+const subscribers: RefreshCallback[] = []
+
+function subscribeTokenRefresh(cb: RefreshCallback): void {
+  subscribers.push(cb)
+}
+
+function redirectLoginPage(): void {
+  // otherwise if (UserModule.hasLoggedIn()) {} will shortcut redirect to `/login`
+  // then an uncaught error `Redirected when going from "/home" to "/login" via a navigation guard.`
+  UserModule.RESET()
+  const next = `/login?redirect=${router.currentRoute.fullPath}`
+  router.push(next)
+}
+
+function doRefreshToken(error: AxiosError): Promise<any> {
+  const originalRequest = error.config
+  // Expired access token or Invalid access token
+  // refer to
+  // https://github.com/konshensx16/vue-todo-frontend/blob/master/src/main.js
+  if (!isRefreshing) {
+    isRefreshing = true
+    // using a new axios instance
+    axios.request({
+      url: '/api/fev1/auth/token/refresh/',
+      method: 'POST',
+      xsrfCookieName: 'csrftoken',
+      xsrfHeaderName: 'X-CSRFTOKEN',
+      timeout: 5000
+    }).then(() => {
+      subscribers.forEach((cb) => {
+        const okOnRefreshed = true
+        cb(okOnRefreshed)
+      })
+    }).catch(() => {
+      Message.error('Login expired. Please login first.')
+      subscribers.forEach((cb) => {
+        const okOnRefreshed = false
+        cb(okOnRefreshed)
+      })
+      redirectLoginPage()
+    }).finally(() => {
+      isRefreshing = false
+    })
+  }
+  const requestSubscribers = new Promise((resolve, reject) => {
+    subscribeTokenRefresh((okOnRefreshed) => {
+      if (okOnRefreshed) {
+        resolve(service(originalRequest))
+      } else {
+        reject(error)
+      }
+    })
+  })
+
+  return requestSubscribers
+}
+
+function doUnauthorizedMsgBox(error: AxiosError): Promise<any> {
+  const { data } = error.response as AxiosResponse
+  const { detail } = data as DrfApiErrorData
+  const result = MessageBox.confirm(detail, 'Unauthorized access', {
+    confirmButtonText: 'Login',
+    cancelButtonText: 'Home Page'
+  }).then(() => {
+    redirectLoginPage()
+  }).catch(() => {
+    router.push('/')
+  })
+  return result
+}
 
 // Request interceptors
 service.interceptors.request.use(
@@ -26,48 +108,39 @@ service.interceptors.request.use(
 // Response interceptors
 service.interceptors.response.use(
   (response) => {
-    // Some example codes here:
-    // code == 20000: success
-    // code == 50001: invalid access token
-    // code == 50002: already login in other place
-    // code == 50003: access token expired
-    // code == 50004: invalid user (user not exist)
-    // code == 50005: username or password is incorrect
-    // You can change this part for your own usage.
-    // const res = response.data
-    // if (res.code !== 20000) {
-    //   Message({
-    //     message: res.message || 'Error',
-    //     type: 'error',
-    //     duration: 5 * 1000
-    //   })
-    //   if (res.code === 50008 || res.code === 50012 || res.code === 50014) {
-    //     MessageBox.confirm(
-    //       '你已被登出，可以取消继续留在该页面，或者重新登录',
-    //       '确定登出',
-    //       {
-    //         confirmButtonText: '重新登录',
-    //         cancelButtonText: '取消',
-    //         type: 'warning'
-    //       }
-    //     ).then(() => {
-    //       UserModule.RefreshToken()
-    //       location.reload() // To prevent bugs from vue-router
-    //     })
-    //   }
-    //   return Promise.reject(new Error(res.message || 'Error'))
-    // } else {
-    //   return response.data
-    // }
     return response
   },
   (error) => {
-    Message({
-      message: error.message,
-      type: 'error',
-      duration: 5 * 1000
-    })
-    return Promise.reject(error)
+    if (!error.response) {
+      return Promise.reject(error)
+    }
+
+    const { config, data, status } = error.response as AxiosResponse
+    const apiErrorData = data as DrfApiErrorData
+    console.info('axios.interceptors.response.use onError', config)
+    // const originalRequest = config
+    let result
+
+    switch (status) {
+      case 403:
+        if (apiErrorData.code) {
+          // Expired access token or Invalid access token
+          // do the refresh
+          result = doRefreshToken(error)
+        } else {
+          // you do have NO permission for this api
+          // popup a redirect dialog to navigation back to home or login page
+          result = doUnauthorizedMsgBox(error)
+        }
+        break
+      case 401:
+        redirectLoginPage()
+        result = Promise.reject<any>(error)
+        break
+      default:
+        result = Promise.reject<any>(error)
+    }
+    return result
   }
 )
 
