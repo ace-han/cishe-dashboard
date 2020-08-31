@@ -3,8 +3,7 @@ import { IUserData } from './types'
 
 export const getUsers = (params: any) =>
   requestService({
-    url: '/users',
-    method: 'get',
+    url: '/fev1/account/users/',
     params
   })
 
