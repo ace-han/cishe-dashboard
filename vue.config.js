@@ -36,6 +36,12 @@ module.exports = {
         pathRewrite: {
           ['^' + process.env.VUE_APP_BASE_API]: ''
         }
+      },
+      // in order to make cookie non-http cookie to work for refresh_token
+      '/api/fev1': {
+        target: `http://localhost:${mockServerPort}`,
+        changeOrigin: true, // needed for virtual hosted sites
+        ws: true // proxy websockets
       }
     }
   },
