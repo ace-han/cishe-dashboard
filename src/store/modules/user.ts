@@ -11,6 +11,7 @@ export interface IUserState {
   username: string
   email: string
   roles: string[]
+  avatar: string
 }
 
 @Module({ dynamic: true, store, name: 'user' })
@@ -18,13 +19,7 @@ class User extends VuexModule implements IUserState {
   public username = ''
   public email = ''
   public roles: string[] = []
-
-  // public hasLoggedIn(): boolean {
-  //   // it won't work !!!
-  //   // getters are based on pre-defined fields of its own `state`
-  //   const result = (getLoggedIn() || '').toLowerCase() === 'true'
-  //   return result
-  // }
+  public avatar = 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif'
 
   @Mutation
   private SET_USERNAME(username: string) {

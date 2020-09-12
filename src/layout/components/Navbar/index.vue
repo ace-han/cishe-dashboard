@@ -12,7 +12,6 @@
     />
     <div class="right-menu">
       <template v-if="device!=='mobile'">
-        <header-search class="right-menu-item" />
         <error-log class="errLog-container right-menu-item hover-effect" />
         <screenfull class="right-menu-item hover-effect" />
         <el-tooltip
@@ -105,6 +104,10 @@ export default class extends Vue {
 
   get device() {
     return AppModule.device.toString()
+  }
+
+  get avatar() {
+    return UserModule.avatar
   }
 
   private toggleSideBar() {
