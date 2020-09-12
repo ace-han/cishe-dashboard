@@ -75,18 +75,18 @@ export const constantRoutes: RouteConfig[] = [
   {
     path: '/',
     component: Layout,
-    redirect: '/home',
+    redirect: '/dashboard',
     children: [
-      {
-        path: 'home',
-        component: () => import(/* webpackChunkName: "home" */ '@/views/home/index.vue'),
-        name: 'Home',
-        meta: {
-          title: 'home',
-          icon: 'dashboard',
-          affix: true
-        }
-      },
+      // {
+      //   path: 'home',
+      //   component: () => import(/* webpackChunkName: "home" */ '@/views/home/index.vue'),
+      //   name: 'Home',
+      //   meta: {
+      //     title: 'home',
+      //     icon: 'dashboard',
+      //     affix: true
+      //   }
+      // },
       {
         path: 'dashboard',
         component: () => import(/* webpackChunkName: "dashboard" */ '@/views/dashboard/index.vue'),
@@ -99,18 +99,22 @@ export const constantRoutes: RouteConfig[] = [
       }
     ]
   },
-  // {
-  //   path: '/documentation',
-  //   component: Layout,
-  //   children: [
-  //     {
-  //       path: 'index',
-  //       component: () => import(/* webpackChunkName: "documentation" */ '@/views/documentation/index.vue'),
-  //       name: 'Documentation',
-  //       meta: { title: 'documentation', icon: 'documentation', affix: true }
-  //     }
-  //   ]
-  // },
+  {
+    path: '/test',
+    component: Layout,
+    redirect: 'noredirect',
+    children: [
+      {
+        path: 'log',
+        component: () => import(/* webpackChunkName: "error-log" */ '@/views/home/index.vue'),
+        name: 'test',
+        meta: {
+          title: 'test',
+          icon: 'bug'
+        }
+      }
+    ]
+  },
   {
     path: '/guide',
     component: Layout,
@@ -435,13 +439,15 @@ export const asyncRoutes: RouteConfig[] = [
       }
     ]
   },
-  {
-    path: 'https://github.com/Armour/vue-typescript-admin-template',
-    meta: {
-      title: 'externalLink',
-      icon: 'link'
-    }
-  },
+  // {
+  //   // seems that external path starts with http(s) not /
+  //   // causes a Non-nested routes must include a leading slash character
+  //   path: 'https://github.com/Armour/vue-typescript-admin-template',
+  //   meta: {
+  //     title: 'externalLink',
+  //     icon: 'link'
+  //   }
+  // },
   {
     path: '*',
     redirect: '/404',
