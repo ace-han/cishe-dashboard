@@ -100,22 +100,6 @@ export const constantRoutes: RouteConfig[] = [
     ]
   },
   {
-    path: '/test',
-    component: Layout,
-    redirect: 'noredirect',
-    children: [
-      {
-        path: 'log',
-        component: () => import(/* webpackChunkName: "error-log" */ '@/views/home/index.vue'),
-        name: 'test',
-        meta: {
-          title: 'test',
-          icon: 'bug'
-        }
-      }
-    ]
-  },
-  {
     path: '/guide',
     component: Layout,
     redirect: '/guide/index',
@@ -448,6 +432,24 @@ export const asyncRoutes: RouteConfig[] = [
   //     icon: 'link'
   //   }
   // },
+  {
+    path: '/test',
+    component: Layout,
+    redirect: '/test/index',
+    children: [
+      {
+        path: 'index',
+        component: () => import(/* webpackChunkName: "test" */ '@/views/test/index.vue'),
+        name: 'Test',
+        meta: {
+          roles: ['admin'],
+          title: 'test',
+          icon: 'bug',
+          noCache: true
+        }
+      }
+    ]
+  },
   {
     path: '*',
     redirect: '/404',
