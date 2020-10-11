@@ -31,7 +31,18 @@ export interface ITransactionData {
   status: string
 }
 
-export interface IUserGroupData {
+export interface ListResponse<T> {
+  count: number
+  next: string | null
+  previous: string| null
+  results: T[]
+}
+
+export interface DeleteResponse {
+  detail: string
+}
+
+export interface IGroupData {
   id?: number
   name: string
 }
@@ -41,6 +52,16 @@ export interface IUserData {
   username: string
   password?: string
   email: string
+  'first_name': string
+  'last_name': string
+  'is_active': boolean
+}
+
+export interface IUserWithGroupData extends IUserData {
   roles: string[] // usually pop from groups
-  groups: IUserGroupData[]
+  groups: IGroupData[]
+}
+
+export interface IGroupWithUserData extends IGroupData {
+  users: IUserData[]
 }

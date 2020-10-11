@@ -25,6 +25,7 @@ export default class extends Vue {
 
   get key() {
     return this.$route.path
+    // return this.$route.fullPath
   }
 }
 </script>

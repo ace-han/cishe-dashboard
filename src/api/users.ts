@@ -1,14 +1,9 @@
 import requestService from '@/utils/request'
-import { IUserData } from './types'
+import { AxiosResponse } from 'axios'
+import { IUserData, IUserWithGroupData, ListResponse } from './types'
 
-export const getUsers = (params: any) =>
-  requestService({
-    url: '/fev1/account/users/',
-    params
-  })
-
-export const getUserInfo = (): Promise<IUserData> => {
-  return requestService.get<IUserData>('/fev1/account/users/current-user-info/', {
+export const getUserInfo = (): Promise<IUserWithGroupData> => {
+  return requestService.get<IUserWithGroupData>('/fev1/account/users/current-user-info/', {
     params: {
       expand: 'groups'
     }
@@ -23,8 +18,8 @@ export const getUserInfo = (): Promise<IUserData> => {
   })
 }
 
-export const getUserByName = (username: string) =>
-  requestService({
-    url: `/users/${username}`,
-    method: 'get'
+export const getUsers = (params: any): Promise<AxiosResponse<ListResponse<IUserData|IUserWithGroupData>>> => {
+  return requestService.get<ListResponse<IUserData|IUserWithGroupData>>('/fev1/account/users/', {
+    params
   })
+}

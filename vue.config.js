@@ -7,10 +7,10 @@ const path = require('path')
 // For example, on Mac: sudo npm run / sudo yarn
 // const devServerPort = defaultSettings.devServerPort // 9527 // TODO: get this variable from setting.ts
 // const mockServerPort = defaultSettings.mockServerPort// 9528 // TODO: get this variable from setting.ts
-// const name = defaultSettings.title // 'Vue Typescript Admin' // TODO: get this variable from setting.ts
+// const name = defaultSettings.title // 'HelloEdu Admin' // TODO: get this variable from setting.ts
 const devServerPort = 9527 // TODO: get this variable from setting.ts
 const mockServerPort = 9528 // TODO: get this variable from setting.ts
-const name = 'Vue Typescript Admin' // TODO: get this variable from setting.ts
+const name = 'HelloEdu Admin' // TODO: get this variable from setting.ts
 
 module.exports = {
   publicPath: process.env.NODE_ENV === 'production' ? '/vue-typescript-admin-template/' : '/',

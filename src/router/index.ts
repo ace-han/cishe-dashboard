@@ -151,7 +151,7 @@ export const asyncRoutes: RouteConfig[] = [
     redirect: '/contract/contracts',
     meta: {
       title: 'contract',
-      icon: 'tree',
+      icon: 'excel',
       roles: ['admin', 'supervisor', 'sales', 'operatation'],
       alwaysShow: true // will always show the root menu
     },
