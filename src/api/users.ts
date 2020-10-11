@@ -1,6 +1,6 @@
 import requestService from '@/utils/request'
 import { AxiosResponse } from 'axios'
-import { IUserData, IUserWithGroupData, ListResponse } from './types'
+import { DeleteResponse, IUserData, IUserWithGroupData, ListResponse } from './types'
 
 export const getUserInfo = (): Promise<IUserWithGroupData> => {
   return requestService.get<IUserWithGroupData>('/fev1/account/users/current-user-info/', {
@@ -18,8 +18,22 @@ export const getUserInfo = (): Promise<IUserWithGroupData> => {
   })
 }
 
-export const getUsers = (params: any): Promise<AxiosResponse<ListResponse<IUserData|IUserWithGroupData>>> => {
-  return requestService.get<ListResponse<IUserData|IUserWithGroupData>>('/fev1/account/users/', {
+export const getUsers = (params: any): Promise<AxiosResponse<ListResponse<IUserWithGroupData>>> => {
+  return requestService.get<ListResponse<IUserWithGroupData>>('/fev1/account/users/', {
+    params
+  })
+}
+
+export const createUser = (data: any): Promise<AxiosResponse<IUserData>> => {
+  return requestService.post<IUserData>('/fev1/account/users/', data)
+}
+
+export const partialUpdateUser = (id: number, data: any): Promise<AxiosResponse<IUserData>> => {
+  return requestService.patch<IUserData>(`/fev1/account/users/${id}/`, data)
+}
+
+export const deleteUsers = (params: any): Promise<AxiosResponse<DeleteResponse>> => {
+  return requestService.post<DeleteResponse>('/fev1/account/users/bulk-delete/', undefined, {
     params
   })
 }

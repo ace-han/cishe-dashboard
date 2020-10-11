@@ -25,9 +25,9 @@
         :disabled="dataLoading"
       >
         <el-row>
-          <el-form-item label="组名">
+          <el-form-item label="名字">
             <el-input
-              v-model="queryParams.name__icontains"
+              v-model="queryParams.search"
               clearable
               placeholder="模糊匹配"
               @keyup.enter.native="submit"
@@ -70,17 +70,32 @@
           property="id"
           label="ID"
         />
-
         <el-table-column
-          property="name"
-          label="组名"
+          property="username"
+          label="登录名"
+        />
+        <el-table-column
+          property="first_name"
+          label="名"
+        />
+        <el-table-column
+          property="last_name"
+          label="姓"
+        />
+        <el-table-column
+          property="date_joined"
+          label="入职时间"
+        />
+        <el-table-column
+          property="last_login"
+          label="最后登录"
         />
 
         <el-table-column
-          label="成员数"
+          label="分组"
         >
           <template slot-scope="{row}">
-            <span>{{ row.users.length }}</span>
+            <span>{{ row.groups.length }}</span>
           </template>
         </el-table-column>
 
@@ -143,13 +158,13 @@
           prop="usernames"
         >
           <el-transfer
-            v-model="form.users"
-            v-loading="formUsersLoading"
+            v-model="form.groups__id__in"
+            v-loading="formGroupsLoading"
             filterable
             filter-placeholder="模糊匹配"
             :titles="['Source', 'Target']"
             :filter-method="filterMethod"
-            :data="userOptions"
+            :data="groupOptions"
           />
         </el-form-item>
       </el-form>
@@ -168,14 +183,15 @@
 </template>
 
 <script lang="ts">
+import moment from 'moment'
 import _ from 'lodash'
 import { Component, Mixins } from 'vue-property-decorator'
-import { createGroup, deleteGroups, getGroups, partialUpdateGroup } from '@/api/groups'
-import { IGroupWithUserData, IUserData } from '@/api/types'
+import { getGroups } from '@/api/groups'
+import { IGroupData, IUserWithGroupData } from '@/api/types'
 import Pagination from '@/components/Pagination/index.vue'
 import FetchDataMixin from '@/views/mixins/list-search'
 import { Dictionary } from 'vue-router/types/router'
-import { getUsers } from '@/api/users'
+import { createUser, deleteUsers, partialUpdateUser, getUsers } from '@/api/users'
 import { ElForm } from 'element-ui/types/form'
 import { TransferData } from 'element-ui/types/transfer'
 
@@ -184,18 +200,28 @@ import { TransferData } from 'element-ui/types/transfer'
     Pagination
   }
 })
-class GroupList extends Mixins<FetchDataMixin<IGroupWithUserData>>(FetchDataMixin) {
+class MemberList extends Mixins<FetchDataMixin<IUserWithGroupData>>(FetchDataMixin) {
   protected watchRouteQueryChange = true
   protected queryParams: Dictionary<any> = {
-    name__icontains: ''
+    search: '',
+    groups__id__in: [] as number[],
+    is_active: null as boolean | null,
+    date_joined__range: [] as moment.Moment[],
+    last_login__range: [] as moment.Moment[]
   }
 
   private formDialogVisible = false
   private form = {
     title: '创建',
     id: 0,
-    name: '',
-    users: [] as number[]
+    username: '',
+    first_name: '',
+    last_name: '',
+    email: '',
+    is_active: true,
+    date_joined: '',
+    last_login: '',
+    groups: [] as number[]
   }
 
   private rules = {
@@ -205,45 +231,52 @@ class GroupList extends Mixins<FetchDataMixin<IGroupWithUserData>>(FetchDataMixi
     ]
   }
 
-  private formUsers: IUserData[] = []
-  private formUsersLoading = false
+  private formGroups: IGroupData[] = []
+  private formGroupsLoading = false
 
-  private get userOptions(): TransferData[] {
+  private get groupOptions(): TransferData[] {
     const result = [] as TransferData[]
-    for (const u of this.formUsers) {
+    for (const g of this.formGroups) {
       result.push({
-        key: u.id,
-        label: `${u.first_name} ${u.last_name} (${u.username}) ${u.is_active ? '' : '(resigned)'}`,
-        disabled: !u.is_active
+        key: g.id,
+        label: `${g.name}(${g.id})`,
+        disabled: false
       })
     }
     return result
   }
 
-  private fetchUsers = _.debounce(this.doFetchUsers, 300)
+  private fetchGroups = _.debounce(this.doFetchGroups, 300)
 
   protected doPrepareFetchParams(): Dictionary<any> {
     const result = {
       ...this.queryParams,
-      expand: 'users',
+      expand: 'groups',
+      omit: 'user_permissions',
       ordering: '-id'
     }
     return result
   }
 
   protected async doFetchData(queryParams: Dictionary<any>) {
-    return getGroups(queryParams)
+    return getUsers(queryParams)
   }
 
   onCreation() {
     this.form = {
       title: '创建',
       id: 0,
-      name: '',
-      users: [] as number[]
+      username: '',
+      first_name: '',
+      last_name: '',
+      email: '',
+      is_active: true,
+      date_joined: '',
+      last_login: '',
+      groups: [] as number[]
     }
     this.formDialogVisible = true
-    this.fetchUsers('')
+    this.fetchGroups('')
   }
 
   onSelectedDeletion() {
@@ -254,31 +287,37 @@ class GroupList extends Mixins<FetchDataMixin<IGroupWithUserData>>(FetchDataMixi
     this.deleteItems(this.selectedDataItems)
   }
 
-  onItemEdit(item: IGroupWithUserData) {
-    const users = []
-    for (const u of item.users) {
-      users.push(u.id || 0)
+  onItemEdit(item: IUserWithGroupData) {
+    const groups = []
+    for (const u of item.groups) {
+      groups.push(u.id || 0)
     }
     this.form = {
       title: '编辑',
-      id: item.id || 0,
-      name: item.name,
-      users
+      id: 0,
+      username: item.username,
+      first_name: item.first_name,
+      last_name: item.last_name,
+      email: item.email,
+      is_active: item.is_active,
+      date_joined: item.date_joined,
+      last_login: item.last_login,
+      groups
     }
     this.formDialogVisible = true
-    this.fetchUsers('')
+    this.fetchGroups('')
   }
 
-  onItemDelete(item: IGroupWithUserData) {
+  onItemDelete(item: IUserWithGroupData) {
     this.deleteItems([item])
   }
 
-  deleteItems(items: IGroupWithUserData[]) {
+  deleteItems(items: IUserWithGroupData[]) {
     const content = ['确认删除以下吗?']
     const selected = [] as number[]
     for (const item of items) {
       selected.push(item.id || 0)
-      content.push(`${item.name}(${item.id})`)
+      content.push(`${item.first_name} ${item.last_name} (${item.username})`)
     }
 
     this.$confirm(content.join('<br/>'), '确认', {
@@ -292,7 +331,7 @@ class GroupList extends Mixins<FetchDataMixin<IGroupWithUserData>>(FetchDataMixi
       const loading = this.$loading({
         lock: true
       })
-      deleteGroups(params).then(() => {
+      deleteUsers(params).then(() => {
         this.$notify.success('操作成功')
         this.search()
       }).catch((err: any) => {
@@ -313,16 +352,16 @@ class GroupList extends Mixins<FetchDataMixin<IGroupWithUserData>>(FetchDataMixi
     }, 10)
   }
 
-  doFetchUsers(term: string) {
-    this.formUsersLoading = true
-    return getUsers({
+  doFetchGroups(term: string) {
+    this.formGroupsLoading = true
+    return getGroups({
       search: term,
       page_size: 999999
     }).then(({ data }) => {
-      this.formUsers = data.results
+      this.formGroups = data.results
       return data.results
     }).finally(() => {
-      this.formUsersLoading = false
+      this.formGroupsLoading = false
     })
   }
 
@@ -340,10 +379,10 @@ class GroupList extends Mixins<FetchDataMixin<IGroupWithUserData>>(FetchDataMixi
         let promise
         if (this.form.id) {
           // put
-          promise = partialUpdateGroup(params.id, params)
+          promise = partialUpdateUser(params.id, params)
         } else {
           // create
-          promise = createGroup(params)
+          promise = createUser(params)
         }
         promise.then(() => {
           this.$notify.success('操作成功')
@@ -363,17 +402,5 @@ class GroupList extends Mixins<FetchDataMixin<IGroupWithUserData>>(FetchDataMixi
   }
 }
 
-export default GroupList
+export default MemberList
 </script>
-
-<style lang="scss" scoped>
-.edit-input {
-  padding-right: 100px;
-}
-
-.cancel-btn {
-  position: absolute;
-  right: 15px;
-  top: 10px;
-}
-</style>

@@ -55,6 +55,8 @@ export interface IUserData {
   'first_name': string
   'last_name': string
   'is_active': boolean
+  'date_joined': string
+  'last_login': string
 }
 
 export interface IUserWithGroupData extends IUserData {
