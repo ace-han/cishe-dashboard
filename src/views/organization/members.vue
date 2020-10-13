@@ -33,6 +33,42 @@
               @keyup.enter.native="submit"
             />
           </el-form-item>
+          <el-form-item label="在职状态">
+            <el-select
+              v-model="queryParams.is_active"
+              clearable
+              filterable
+              placeholder="全部"
+              class="filter-item"
+            >
+              <el-option
+                :value="true"
+                label="在职"
+              />
+              <el-option
+                :value="false"
+                label="已离职"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="分组">
+            <el-select
+              v-model="queryParams.groups__name__in"
+              v-loading="formGroupsLoading"
+              clearable
+              filterable
+              multiple
+              placeholder="全部"
+              class="filter-item"
+            >
+              <el-option
+                v-for="item in formGroups"
+                :key="item.id"
+                :value="item.name"
+                :label="item.name"
+              />
+            </el-select>
+          </el-form-item>
         </el-row>
       </el-form>
     </el-card>
@@ -75,30 +111,61 @@
           label="登录名"
         />
         <el-table-column
-          property="first_name"
-          label="名"
-        />
+          label="姓名"
+        >
+          <template slot-scope="{row}">
+            {{ row.first_name }} {{ row.last_name }}
+          </template>
+        </el-table-column>
         <el-table-column
-          property="last_name"
-          label="姓"
-        />
-        <el-table-column
-          property="date_joined"
-          label="入职时间"
-        />
-        <el-table-column
-          property="last_login"
-          label="最后登录"
-        />
-
+          property="is_active"
+          label="在职状态"
+        >
+          <template slot-scope="{row}">
+            <el-tag
+              v-if="row.is_active"
+            >
+              在职
+            </el-tag>
+            <el-tag
+              v-else
+              type="info"
+            >
+              已离职
+            </el-tag>
+          </template>
+        </el-table-column>
         <el-table-column
           label="分组"
         >
           <template slot-scope="{row}">
-            <span>{{ row.groups.length }}</span>
+            <el-tag
+              v-for="item in row.groups"
+              :key="item.id"
+              type="info"
+              style="margin-bottom:0.5em;"
+            >
+              {{ item.name }}
+            </el-tag>
+            <br>
           </template>
         </el-table-column>
-
+        <el-table-column
+          property="date_joined"
+          label="入职时间"
+        >
+          <template slot-scope="{row}">
+            {{ row.date_joined | parseMoment }}
+          </template>
+        </el-table-column>
+        <el-table-column
+          property="last_login"
+          label="最后登录"
+        >
+          <template slot-scope="{row}">
+            {{ row.last_login | parseMoment }}
+          </template>
+        </el-table-column>
         <el-table-column
           align="center"
           label="操作"
@@ -142,23 +209,55 @@
         :rules="rules"
       >
         <el-form-item
-          label="组名"
-          prop="name"
+          label="登录名"
+          prop="username"
         >
           <el-input
-            v-model="form.name"
+            v-model="form.username"
             type="text"
-            placeholder="组名"
+            placeholder="登录名"
             maxlength="150"
             show-word-limit
           />
         </el-form-item>
         <el-form-item
-          label="成员"
-          prop="usernames"
+          label="名"
+          prop="first_name"
+        >
+          <el-input
+            v-model="form.first_name"
+            type="text"
+            placeholder="名"
+            maxlength="150"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item
+          label="姓"
+          prop="last_name"
+        >
+          <el-input
+            v-model="form.last_name"
+            type="text"
+            placeholder="姓"
+            maxlength="150"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item
+          label="在职状态"
+          prop="is_active"
+        >
+          <el-switch
+            v-model="form.is_active"
+          />
+        </el-form-item>
+        <el-form-item
+          label="分组"
+          prop="groups"
         >
           <el-transfer
-            v-model="form.groups__id__in"
+            v-model="form.groups"
             v-loading="formGroupsLoading"
             filterable
             filter-placeholder="模糊匹配"
@@ -166,6 +265,22 @@
             :filter-method="filterMethod"
             :data="groupOptions"
           />
+        </el-form-item>
+        <el-form-item
+          property="date_joined"
+          label="入职时间"
+        >
+          <el-date-picker
+            v-model="form.date_joined"
+            type="datetime"
+            placeholder="请选时间"
+          />
+        </el-form-item>
+        <el-form-item
+          v-show="form.id"
+          label="最后登录"
+        >
+          {{ form.last_login | parseMoment }}
         </el-form-item>
       </el-form>
       <span
@@ -204,11 +319,13 @@ class MemberList extends Mixins<FetchDataMixin<IUserWithGroupData>>(FetchDataMix
   protected watchRouteQueryChange = true
   protected queryParams: Dictionary<any> = {
     search: '',
-    groups__id__in: [] as number[],
+    groups__name__in: [] as string[],
     is_active: null as boolean | null,
     date_joined__range: [] as moment.Moment[],
     last_login__range: [] as moment.Moment[]
   }
+
+  protected booleanQsFields: string[] = ['is_active']
 
   private formDialogVisible = false
   private form = {
@@ -220,12 +337,20 @@ class MemberList extends Mixins<FetchDataMixin<IUserWithGroupData>>(FetchDataMix
     email: '',
     is_active: true,
     date_joined: '',
-    last_login: '',
+    last_login: '' as string | undefined,
     groups: [] as number[]
   }
 
   private rules = {
-    name: [
+    username: [
+      { required: true, trigger: 'blur' },
+      { min: 1, max: 150, message: '最大长度150字符', trigger: 'change' }
+    ],
+    first_name: [
+      { required: true, trigger: 'blur' },
+      { min: 1, max: 150, message: '最大长度150字符', trigger: 'change' }
+    ],
+    last_name: [
       { required: true, trigger: 'blur' },
       { min: 1, max: 150, message: '最大长度150字符', trigger: 'change' }
     ]
@@ -234,12 +359,17 @@ class MemberList extends Mixins<FetchDataMixin<IUserWithGroupData>>(FetchDataMix
   private formGroups: IGroupData[] = []
   private formGroupsLoading = false
 
+  created() {
+    console.info('fetchGroups=====')
+    this.fetchGroups('')
+  }
+
   private get groupOptions(): TransferData[] {
     const result = [] as TransferData[]
     for (const g of this.formGroups) {
       result.push({
         key: g.id,
-        label: `${g.name}(${g.id})`,
+        label: `${g.name}`,
         disabled: false
       })
     }
@@ -249,11 +379,21 @@ class MemberList extends Mixins<FetchDataMixin<IUserWithGroupData>>(FetchDataMix
   private fetchGroups = _.debounce(this.doFetchGroups, 300)
 
   protected doPrepareFetchParams(): Dictionary<any> {
-    const result = {
+    // const result = {
+    //   ...this.queryParams,
+    //   expand: 'groups',
+    //   omit: 'user_permissions',
+    //   ordering: '-id'
+    // }
+    const result = Object.assign({
       ...this.queryParams,
       expand: 'groups',
       omit: 'user_permissions',
-      ordering: '-id'
+      ordering: '-last_login,-id'
+    }, this.queryParams)
+
+    if (result.groups__name__in.length) {
+      result.groups__name__in = result.groups__name__in.join(',')
     }
     return result
   }
@@ -271,12 +411,11 @@ class MemberList extends Mixins<FetchDataMixin<IUserWithGroupData>>(FetchDataMix
       last_name: '',
       email: '',
       is_active: true,
-      date_joined: '',
+      date_joined: moment().utc().format(),
       last_login: '',
       groups: [] as number[]
     }
     this.formDialogVisible = true
-    this.fetchGroups('')
   }
 
   onSelectedDeletion() {
@@ -294,7 +433,7 @@ class MemberList extends Mixins<FetchDataMixin<IUserWithGroupData>>(FetchDataMix
     }
     this.form = {
       title: '编辑',
-      id: 0,
+      id: item.id || 0,
       username: item.username,
       first_name: item.first_name,
       last_name: item.last_name,
@@ -305,7 +444,7 @@ class MemberList extends Mixins<FetchDataMixin<IUserWithGroupData>>(FetchDataMix
       groups
     }
     this.formDialogVisible = true
-    this.fetchGroups('')
+    // this.fetchGroups('')
   }
 
   onItemDelete(item: IUserWithGroupData) {
@@ -382,6 +521,7 @@ class MemberList extends Mixins<FetchDataMixin<IUserWithGroupData>>(FetchDataMix
           promise = partialUpdateUser(params.id, params)
         } else {
           // create
+          delete params.last_login
           promise = createUser(params)
         }
         promise.then(() => {
