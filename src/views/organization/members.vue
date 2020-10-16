@@ -173,14 +173,21 @@
         >
           <template slot-scope="{row}">
             <el-button
-              size="small"
+              size="mini"
+              icon="el-icon-lock"
+              @click="onItemPassword(row)"
+            >
+              改密码
+            </el-button>
+            <el-button
+              size="mini"
               icon="el-icon-edit"
               @click="onItemEdit(row)"
             >
               编辑
             </el-button>
             <el-button
-              size="small"
+              size="mini"
               icon="el-icon-delete"
               @click="onItemDelete(row)"
             >
@@ -306,7 +313,7 @@ import { IGroupData, IUserWithGroupData } from '@/api/types'
 import Pagination from '@/components/Pagination/index.vue'
 import FetchDataMixin from '@/views/mixins/list-search'
 import { Dictionary } from 'vue-router/types/router'
-import { createUser, deleteUsers, partialUpdateUser, getUsers } from '@/api/users'
+import { createUser, deleteUsers, partialUpdateUser, getUsers, updateUserPassword } from '@/api/users'
 import { ElForm } from 'element-ui/types/form'
 import { TransferData } from 'element-ui/types/transfer'
 
@@ -379,20 +386,13 @@ class MemberList extends Mixins<FetchDataMixin<IUserWithGroupData>>(FetchDataMix
   private fetchGroups = _.debounce(this.doFetchGroups, 300)
 
   protected doPrepareFetchParams(): Dictionary<any> {
-    // const result = {
-    //   ...this.queryParams,
-    //   expand: 'groups',
-    //   omit: 'user_permissions',
-    //   ordering: '-id'
-    // }
     const result = Object.assign({
-      ...this.queryParams,
       expand: 'groups',
       omit: 'user_permissions',
       ordering: '-last_login,-id'
     }, this.queryParams)
 
-    if (result.groups__name__in.length) {
+    if (result.groups__name__in && result.groups__name__in.length) {
       result.groups__name__in = result.groups__name__in.join(',')
     }
     return result
@@ -424,6 +424,24 @@ class MemberList extends Mixins<FetchDataMixin<IUserWithGroupData>>(FetchDataMix
       return
     }
     this.deleteItems(this.selectedDataItems)
+  }
+
+  onItemPassword(item: IUserWithGroupData) {
+    this.$prompt('请输入新密码', '改密码', {
+      inputType: 'password',
+      inputPattern: /[^\t\b\n\r]{6,32}/,
+      inputPlaceholder: '请输入6~32个字符数',
+      inputErrorMessage: '非法输入'
+    }).then((data: any) => {
+      return updateUserPassword(item.id || 0, data.value)
+    }).then(() => {
+      this.$notify.success('操作成功')
+    }).catch(() => {
+      this.$message({
+        type: 'info',
+        message: 'Input canceled'
+      })
+    })
   }
 
   onItemEdit(item: IUserWithGroupData) {

@@ -37,3 +37,11 @@ export const deleteUsers = (params: any): Promise<AxiosResponse<DeleteResponse>>
     params
   })
 }
+
+export const updateUserPassword = (id: number, password: string): Promise<AxiosResponse<{}>> => {
+  return requestService.post<{}>(`/fev1/account/users/${id}/password/`, {
+    data: {
+      password
+    }
+  })
+}
