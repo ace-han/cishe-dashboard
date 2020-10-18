@@ -7,7 +7,11 @@ export default {
     organizationMembers: 'Member Mgt',
     contract: 'Contract',
     contractContracts: 'Contract Mgt',
+    contractContractCreate: 'Contract Creation',
+    contractContractEdit: 'Contract Edit',
     contractCustomers: 'Customer Mgt',
+    contractCustomerCreate: 'Customer Creation',
+    contractCustomerEdit: 'Customer Edit',
     profile: 'Profile'
   },
   navbar: {

@@ -1,27 +1,4 @@
-export interface IArticleData {
-  id: number
-  status: string
-  title: string
-  abstractContent: string
-  fullContent: string
-  sourceURL: string
-  imageURL: string
-  timestamp: string | number
-  platforms: string[]
-  disableComment: boolean
-  importance: number
-  author: string
-  reviewer: string
-  type: string
-  pageviews: number
-}
-
-export interface IRoleData {
-  key: string
-  name: string
-  description: string
-  routes: any
-}
+import { Moment } from 'moment'
 
 export interface ITransactionData {
   orderId: string
@@ -66,4 +43,59 @@ export interface IUserWithGroupData extends IUserData {
 
 export interface IGroupWithUserData extends IGroupData {
   users: IUserData[]
+}
+
+export interface ICustomerData {
+  id?: number
+  name: string
+  'phone_num': string
+  'phone_num2': string
+  email: string
+  'parent_phone_num': string
+  'parent_type': string
+  university: string
+  department: string
+  major: string
+}
+
+export interface IContractData {
+  id?: number
+  'contract_num': string
+  'contract_type': string
+  source: string
+  'signing_date': string
+  'signing_branch': string
+  'sale_agent': number
+  'sale_agent_username': string
+  'probation_until': string
+  'total_amount': number
+  'referrer': string
+  'supplementary_agreement': string
+}
+
+export interface IServiceInfoData {
+  id?: number
+  contract: number
+  'contract_num': string
+  'enrollment_semester': string
+  'retention_statement': string
+  'target_country_code': string
+  'target_subject': string
+  'target_degree': string
+  'target_major': string
+  team: string
+  workload: number
+  status: string
+  'start_date': string
+  remark: string
+}
+
+export interface ITakeOverData {
+  id?: number
+  staff: number
+  'staff_username': string
+  contract: number
+  'contract_num': string
+  'transfer_date': string
+  remark: string
 }

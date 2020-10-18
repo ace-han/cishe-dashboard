@@ -36,8 +36,21 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
-import { getTransactions } from '@/api/transactions'
-import { ITransactionData } from '@/api/types'
+
+interface ITransactionData {
+  orderId: string
+  price: number
+  status: string
+}
+
+const getTransactions = (params: any): Promise<{data: {items: ITransactionData[]}}> => {
+  console.info('getTransactions, params', params)
+  return Promise.resolve({
+    data: {
+      items: [] as ITransactionData[]
+    }
+  })
+}
 
 @Component({
   name: 'TransactionTable',

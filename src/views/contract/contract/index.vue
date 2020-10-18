@@ -170,8 +170,8 @@
 <script lang="ts">
 import _ from 'lodash'
 import { Component, Mixins } from 'vue-property-decorator'
-import { createGroup, deleteGroups, getGroups, partialUpdateGroup } from '@/api/groups'
-import { IGroupWithUserData, IUserData } from '@/api/types'
+import { createContract, deleteContracts, getContracts, partialUpdateContract } from '@/api/contracts'
+import { IContractData, IUserData } from '@/api/types'
 import Pagination from '@/components/Pagination/index.vue'
 import FetchDataMixin from '@/views/mixins/list-search'
 import { Dictionary } from 'vue-router/types/router'
@@ -184,18 +184,26 @@ import { TransferData } from 'element-ui/types/transfer'
     Pagination
   }
 })
-class GroupList extends Mixins<FetchDataMixin<IGroupWithUserData>>(FetchDataMixin) {
+class ContractList extends Mixins<FetchDataMixin<IContractData>>(FetchDataMixin) {
   protected watchRouteQueryChange = true
   protected queryParams: Dictionary<any> = {
-    name__icontains: ''
+    customer__in: [] as string[]
   }
 
   private formDialogVisible = false
   private form = {
     title: '创建',
     id: 0,
-    name: '',
-    users: [] as number[]
+    contract_num: '',
+    contract_type: '',
+    source: '',
+    signing_date: '',
+    signing_branch: '',
+    sale_agent: 0,
+    probation_until: '',
+    total_amount: 0,
+    referrer: '',
+    supplementary_agreement: ''
   }
 
   private rules = {
@@ -232,15 +240,23 @@ class GroupList extends Mixins<FetchDataMixin<IGroupWithUserData>>(FetchDataMixi
   }
 
   protected async doFetchData(queryParams: Dictionary<any>) {
-    return getGroups(queryParams)
+    return getContracts(queryParams)
   }
 
   onCreation() {
     this.form = {
       title: '创建',
       id: 0,
-      name: '',
-      users: [] as number[]
+      contract_num: '',
+      contract_type: '',
+      source: '',
+      signing_date: '',
+      signing_branch: '',
+      sale_agent: 0,
+      probation_until: '',
+      total_amount: 0,
+      referrer: '',
+      supplementary_agreement: ''
     }
     this.formDialogVisible = true
     this.fetchUsers('')
@@ -254,31 +270,26 @@ class GroupList extends Mixins<FetchDataMixin<IGroupWithUserData>>(FetchDataMixi
     this.deleteItems(this.selectedDataItems)
   }
 
-  onItemEdit(item: IGroupWithUserData) {
-    const users = []
-    for (const u of item.users) {
-      users.push(u.id || 0)
-    }
+  onItemEdit(item: IContractData) {
     this.form = {
+      ...item,
       title: '编辑',
-      id: item.id || 0,
-      name: item.name,
-      users
+      id: item.id || 0
     }
     this.formDialogVisible = true
     this.fetchUsers('')
   }
 
-  onItemDelete(item: IGroupWithUserData) {
+  onItemDelete(item: IContractData) {
     this.deleteItems([item])
   }
 
-  deleteItems(items: IGroupWithUserData[]) {
+  deleteItems(items: IContractData[]) {
     const content = ['确认删除以下吗?']
     const selected = [] as number[]
     for (const item of items) {
       selected.push(item.id || 0)
-      content.push(`${item.name}(${item.id})`)
+      content.push(`${item.contract_num}(${item.id})`)
     }
 
     this.$confirm(content.join('<br/>'), '确认', {
@@ -292,7 +303,7 @@ class GroupList extends Mixins<FetchDataMixin<IGroupWithUserData>>(FetchDataMixi
       const loading = this.$loading({
         lock: true
       })
-      deleteGroups(params).then(() => {
+      deleteContracts(params).then(() => {
         this.$notify.success('操作成功')
         this.search()
       }).catch((err: any) => {
@@ -340,10 +351,10 @@ class GroupList extends Mixins<FetchDataMixin<IGroupWithUserData>>(FetchDataMixi
         let promise
         if (this.form.id) {
           // put
-          promise = partialUpdateGroup(params.id, params)
+          promise = partialUpdateContract(params.id, params)
         } else {
           // create
-          promise = createGroup(params)
+          promise = createContract(params)
         }
         promise.then(() => {
           this.$notify.success('操作成功')
@@ -363,17 +374,5 @@ class GroupList extends Mixins<FetchDataMixin<IGroupWithUserData>>(FetchDataMixi
   }
 }
 
-export default GroupList
+export default ContractList
 </script>
-
-<style lang="scss" scoped>
-.edit-input {
-  padding-right: 100px;
-}
-
-.cancel-btn {
-  position: absolute;
-  right: 15px;
-  top: 10px;
-}
-</style>

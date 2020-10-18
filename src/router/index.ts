@@ -157,19 +157,40 @@ export const asyncRoutes: RouteConfig[] = [
     },
     children: [
       {
+        path: 'customers',
+        component: () => import(/* webpackChunkName: "contract-customers" */ '@/views/contract/customers.vue'),
+        name: 'ContractCustomers',
+        meta: {
+          title: 'contractCustomers'
+        }
+      },
+      {
         path: 'contracts',
-        component: () => import(/* webpackChunkName: "contract-contracts" */ '@/views/contract/contracts.vue'),
+        // in order to keep only one Layout,
+        // we keep slash in the component pattern,
+        // like `component: () => import(/* webpackChunkName: "contract-contracts" */ 'xxx/yyy')`
+        component: () => import(/* webpackChunkName: "contract-contracts" */ '@/views/contract/contract/index.vue'),
         name: 'ContractContracts',
         meta: {
           title: 'contractContracts'
         }
       },
       {
-        path: 'customers',
-        component: () => import(/* webpackChunkName: "contract-customers" */ '@/views/contract/customers.vue'),
-        name: 'ContractCustomers',
+        path: 'contracts/create',
+        component: () => import(/* webpackChunkName: "contract-contract-create" */ '@/views/contract/contract/create.vue'),
+        name: 'ContractContractCreate',
         meta: {
-          title: 'contractCustomers'
+          title: 'contractContractCreate',
+          hidden: true
+        }
+      },
+      {
+        path: 'contracts/:id/edit',
+        component: () => import(/* webpackChunkName: "contract-contract-edit" */ '@/views/contract/contract/edit.vue'),
+        name: 'ContractContractEdit',
+        meta: {
+          title: 'contractContractEdit',
+          hidden: true
         }
       }
     ]

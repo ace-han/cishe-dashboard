@@ -7,7 +7,11 @@ export default {
     organizationMembers: '成员管理',
     contract: '合同',
     contractContracts: '合同管理',
+    contractContractCreate: '合同创建',
+    contractContractEdit: '合同编辑',
     contractCustomers: '客户管理',
+    contractCustomerCreate: '客户创建',
+    contractCustomerEdit: '客户编辑',
     profile: '个人中心'
   },
   navbar: {
