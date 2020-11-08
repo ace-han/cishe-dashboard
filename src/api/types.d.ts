@@ -60,13 +60,13 @@ export interface ICustomerData {
 
 export interface IContractData {
   id?: number
+  customer: number | ICustomerData
   'contract_num': string
   'contract_type': string
   source: string
   'signing_date': string
   'signing_branch': string
-  'sale_agent': number
-  'sale_agent_username': string
+  'sale_agent': number | IUserData
   'probation_until': string
   'total_amount': number
   'referrer': string
@@ -98,4 +98,8 @@ export interface ITakeOverData {
   'contract_num': string
   'transfer_date': string
   remark: string
+}
+
+export interface IContractDataWithDetail extends IContractData {
+  serviceinfo: IServiceInfoData
 }

@@ -25,7 +25,47 @@
         :disabled="dataLoading"
       >
         <el-row>
-          <el-form-item label="组名">
+          <el-form-item label="学生名字">
+            <el-input
+              v-model="queryParams.name__icontains"
+              clearable
+              placeholder="模糊匹配"
+              @keyup.enter.native="submit"
+            />
+          </el-form-item>
+          <el-form-item label="申请国家">
+            <el-input
+              v-model="queryParams.name__icontains"
+              clearable
+              placeholder="模糊匹配"
+              @keyup.enter.native="submit"
+            />
+          </el-form-item>
+          <el-form-item label="申请专业">
+            <el-input
+              v-model="queryParams.name__icontains"
+              clearable
+              placeholder="模糊匹配"
+              @keyup.enter.native="submit"
+            />
+          </el-form-item>
+          <el-form-item label="策划期">
+            <el-input
+              v-model="queryParams.name__icontains"
+              clearable
+              placeholder="模糊匹配"
+              @keyup.enter.native="submit"
+            />
+          </el-form-item>
+          <el-form-item label="签约人员">
+            <el-input
+              v-model="queryParams.name__icontains"
+              clearable
+              placeholder="模糊匹配"
+              @keyup.enter.native="submit"
+            />
+          </el-form-item>
+          <el-form-item label="合同价格">
             <el-input
               v-model="queryParams.name__icontains"
               clearable
@@ -53,6 +93,124 @@
           :disabled="isEmptyItemSelection"
           @click="onSelectedDeletion"
         />
+        <el-dropdown
+          style="float:right"
+          split-button
+          :hide-on-click="false"
+          @command="toggleColumn"
+        >
+          列选择
+          <el-dropdown-menu slot="dropdown">
+            <el-dropdown-item command="a">
+              Action 1
+            </el-dropdown-item>
+            <el-dropdown-item command="b">
+              Action 2
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+            <el-dropdown-item command="c">
+              Action 3
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </el-dropdown>
       </div>
       <el-table
         v-loading="dataLoading"
@@ -70,20 +228,66 @@
           property="id"
           label="ID"
         />
-
         <el-table-column
-          property="name"
-          label="组名"
-        />
-
-        <el-table-column
-          label="成员数"
+          label="学生名字"
         >
           <template slot-scope="{row}">
-            <span>{{ row.users.length }}</span>
+            <el-link
+              type="info"
+              :href="`/#/contract/customers?name__icontains=${ row.customer.name }}`"
+              target="_blank"
+            >
+              {{ row.customer.name }} ({{ row.customer.id }})
+            </el-link>
           </template>
         </el-table-column>
-
+        <el-table-column
+          label="申请国家"
+        >
+          <template slot-scope="{row}">
+            <span>{{ row.serviceinfo.target_country_code }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="申请专业"
+        >
+          <template slot-scope="{row}">
+            <span>{{ row.serviceinfo.target_major }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="策划期"
+        >
+          <template slot-scope="{row}">
+            <span>{{ row.probation_until | parseMoment }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          label="签约人员"
+        >
+          <template slot-scope="{row}">
+            <el-link
+              type="info"
+              :href="`/#/organization/members?search=${ row.sale_agent.name }}`"
+              target="_blank"
+            >
+              {{ row.sale_agent.name }} ({{ row.sale_agent.id }})
+            </el-link>
+          </template>
+        </el-table-column>
+        <!--
+          v-show doesnot work
+          <el-table-column
+            v-show="false"
+            property="total_amount"
+            label="签约价格"
+          />
+        -->
+        <el-table-column
+          v-show="false"
+          property="total_amount"
+          label="签约价格"
+        />
         <el-table-column
           align="center"
           label="操作"
@@ -171,7 +375,7 @@
 import _ from 'lodash'
 import { Component, Mixins } from 'vue-property-decorator'
 import { createContract, deleteContracts, getContracts, partialUpdateContract } from '@/api/contracts'
-import { IContractData, IUserData } from '@/api/types'
+import { IContractDataWithDetail, IUserData } from '@/api/types'
 import Pagination from '@/components/Pagination/index.vue'
 import FetchDataMixin from '@/views/mixins/list-search'
 import { Dictionary } from 'vue-router/types/router'
@@ -184,7 +388,7 @@ import { TransferData } from 'element-ui/types/transfer'
     Pagination
   }
 })
-class ContractList extends Mixins<FetchDataMixin<IContractData>>(FetchDataMixin) {
+class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(FetchDataMixin) {
   protected watchRouteQueryChange = true
   protected queryParams: Dictionary<any> = {
     customer__in: [] as string[]
@@ -215,6 +419,26 @@ class ContractList extends Mixins<FetchDataMixin<IContractData>>(FetchDataMixin)
 
   private formUsers: IUserData[] = []
   private formUsersLoading = false
+
+  private colKeySelectionMap = {
+    id: {
+      label: 'ID',
+      selected: true
+    },
+    'cutomer.id': {
+      label: '学生ID',
+      selected: false
+    },
+    'cutomer.name': {
+      label: '学生ID',
+      selected: true
+    },
+    'serviceinfo.target_country_code': {
+      label: '学生ID',
+      selected: false
+    }
+
+  }
 
   private get userOptions(): TransferData[] {
     const result = [] as TransferData[]
@@ -270,7 +494,7 @@ class ContractList extends Mixins<FetchDataMixin<IContractData>>(FetchDataMixin)
     this.deleteItems(this.selectedDataItems)
   }
 
-  onItemEdit(item: IContractData) {
+  onItemEdit(item: IContractDataWithDetail) {
     this.form = {
       ...item,
       title: '编辑',
@@ -280,11 +504,11 @@ class ContractList extends Mixins<FetchDataMixin<IContractData>>(FetchDataMixin)
     this.fetchUsers('')
   }
 
-  onItemDelete(item: IContractData) {
+  onItemDelete(item: IContractDataWithDetail) {
     this.deleteItems([item])
   }
 
-  deleteItems(items: IContractData[]) {
+  deleteItems(items: IContractDataWithDetail[]) {
     const content = ['确认删除以下吗?']
     const selected = [] as number[]
     for (const item of items) {
@@ -371,6 +595,10 @@ class ContractList extends Mixins<FetchDataMixin<IContractData>>(FetchDataMixin)
         return false
       }
     })
+  }
+
+  toggleColumn(command: string) {
+    this.$message('toggleColumn item ' + command)
   }
 }
 
