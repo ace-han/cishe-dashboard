@@ -93,124 +93,44 @@
           :disabled="isEmptyItemSelection"
           @click="onSelectedDeletion"
         />
-        <el-dropdown
+        <el-tooltip content="Export Selected">
+          <el-button
+            title="Export selected"
+            :disabled="isEmptyItemSelection"
+            @click="onSelectedExport"
+          >
+            <svg-icon name="excel" />
+          </el-button>
+        </el-tooltip>
+        <el-tooltip content="Export All">
+          <el-button
+            title="Export all"
+            icon="el-icon-download"
+            @click="onAllExport"
+          />
+        </el-tooltip>
+        <el-form
+          inline
           style="float:right"
-          split-button
-          :hide-on-click="false"
-          @command="toggleColumn"
         >
-          列选择
-          <el-dropdown-menu slot="dropdown">
-            <el-dropdown-item command="a">
-              Action 1
-            </el-dropdown-item>
-            <el-dropdown-item command="b">
-              Action 2
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-            <el-dropdown-item command="c">
-              Action 3
-            </el-dropdown-item>
-          </el-dropdown-menu>
-        </el-dropdown>
+          <el-form-item label="列选择">
+            <el-select
+              :value="selectedColumns"
+              collapse-tags
+              filterable
+              multiple
+              placeholder="Select columns to show"
+              @change="onColumnsChange"
+            >
+              <el-option
+                v-for="item in columnOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </el-form-item>
+        </el-form>
       </div>
       <el-table
         v-loading="dataLoading"
@@ -225,10 +145,12 @@
           width="55"
         />
         <el-table-column
+          v-if="colKeyOptionInfoMap['id'].selected"
           property="id"
           label="ID"
         />
         <el-table-column
+          v-if="colKeyOptionInfoMap['cutomer.name'].selected"
           label="学生名字"
         >
           <template slot-scope="{row}">
@@ -242,6 +164,7 @@
           </template>
         </el-table-column>
         <el-table-column
+          v-if="colKeyOptionInfoMap['serviceinfo.target_country_code'].selected"
           label="申请国家"
         >
           <template slot-scope="{row}">
@@ -249,6 +172,7 @@
           </template>
         </el-table-column>
         <el-table-column
+          v-if="colKeyOptionInfoMap['serviceinfo.target_major'].selected"
           label="申请专业"
         >
           <template slot-scope="{row}">
@@ -256,6 +180,7 @@
           </template>
         </el-table-column>
         <el-table-column
+          v-if="colKeyOptionInfoMap['probation_until'].selected"
           label="策划期"
         >
           <template slot-scope="{row}">
@@ -263,15 +188,16 @@
           </template>
         </el-table-column>
         <el-table-column
+          v-if="colKeyOptionInfoMap['sale_agent.username'].selected"
           label="签约人员"
         >
           <template slot-scope="{row}">
             <el-link
               type="info"
-              :href="`/#/organization/members?search=${ row.sale_agent.name }}`"
+              :href="`/#/organization/members?search=${ row.sale_agent.username }}`"
               target="_blank"
             >
-              {{ row.sale_agent.name }} ({{ row.sale_agent.id }})
+              {{ row.sale_agent.username }} ({{ row.sale_agent.id }})
             </el-link>
           </template>
         </el-table-column>
@@ -284,9 +210,107 @@
           />
         -->
         <el-table-column
-          v-show="false"
+          v-if="colKeyOptionInfoMap['total_amount'].selected"
           property="total_amount"
           label="签约价格"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['contract_type'].selected"
+          property="contract_type"
+          label="合同类型"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['contract_num'].selected"
+          property="contract_num"
+          label="合同编号"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['source'].selected"
+          property="source"
+          label="客户来源"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['signing_date'].selected"
+          property="signing_date"
+          label="签约日期"
+        >
+          <template slot-scope="{row}">
+            <span>{{ row.signing_date | parseMoment('YYYY-MM-DD') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          v-if="colKeyOptionInfoMap['signing_branch'].selected"
+          property="signing_branch"
+          label="签约子公司"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['referrer'].selected"
+          property="referrer"
+          label="介绍人"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['supplementary_agreement'].selected"
+          property="supplementary_agreement"
+          label="附加协议"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['supplementary_agreement'].selected"
+          property="supplementary_agreement"
+          label="附加协议"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['serviceinfo.id'].selected"
+          property="serviceinfo.id"
+          label="服务项目ID"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['serviceinfo.enrollment_semester'].selected"
+          property="serviceinfo.enrollment_semester"
+          label="申请季"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['serviceinfo.retention_statement'].selected"
+          property="serviceinfo.retention_statement"
+          label="延期描述"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['serviceinfo.target_subject'].selected"
+          property="serviceinfo.target_subject"
+          label="合同科目"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['serviceinfo.target_degree'].selected"
+          property="serviceinfo.target_degree"
+          label="申请学位"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['serviceinfo.team'].selected"
+          property="serviceinfo.team"
+          label="项目组"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['serviceinfo.workload'].selected"
+          property="serviceinfo.workload"
+          label="工作量"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['serviceinfo.status'].selected"
+          property="serviceinfo.status"
+          label="项目状态"
+        />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['serviceinfo.start_date'].selected"
+          property="serviceinfo.start_date"
+          label="启动日期"
+        >
+          <template slot-scope="{row}">
+            <span>{{ row.start_date | parseMoment('YYYY-MM-DD') }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column
+          v-if="colKeyOptionInfoMap['serviceinfo.remark'].selected"
+          property="serviceinfo.remark"
+          label="备注"
         />
         <el-table-column
           align="center"
@@ -420,24 +444,128 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
   private formUsers: IUserData[] = []
   private formUsersLoading = false
 
-  private colKeySelectionMap = {
+  private colKeyOptionInfoMap: {
+    [key: string]: {
+      label: string
+      selected: boolean
+  }} = {
     id: {
       label: 'ID',
-      selected: true
-    },
-    'cutomer.id': {
-      label: '学生ID',
       selected: false
     },
     'cutomer.name': {
-      label: '学生ID',
+      label: '学生姓名',
       selected: true
     },
     'serviceinfo.target_country_code': {
-      label: '学生ID',
+      label: '申请国家',
+      selected: true
+    },
+    'serviceinfo.target_major': {
+      label: '申请专业',
+      selected: true
+    },
+    probation_until: {
+      label: '策划期',
+      selected: true
+    },
+    'sale_agent.username': {
+      label: '签约人',
+      selected: true
+    },
+    total_amount: {
+      label: '签约价格',
+      selected: true
+    },
+    contract_type: {
+      label: '合同类型',
+      selected: false
+    },
+    contract_num: {
+      label: '合同编号',
+      selected: false
+    },
+    source: {
+      label: '客户来源',
+      selected: false
+    },
+    signing_date: {
+      label: '签约日期',
+      selected: false
+    },
+    signing_branch: {
+      label: '签约子公司',
+      selected: false
+    },
+    referrer: {
+      label: '介绍人',
+      selected: false
+    },
+    supplementary_agreement: {
+      label: '附加协议',
+      selected: false
+    },
+    'serviceinfo.id': {
+      label: '服务项目ID',
+      selected: false
+    },
+    'serviceinfo.enrollment_semester': {
+      label: '申请季',
+      selected: false
+    },
+    'serviceinfo.retention_statement': {
+      label: '延期描述',
+      selected: false
+    },
+    'serviceinfo.target_subject': {
+      label: '申请科目',
+      selected: false
+    },
+    'serviceinfo.target_degree': {
+      label: '申请学位',
+      selected: false
+    },
+    'serviceinfo.team': {
+      label: '项目组',
+      selected: false
+    },
+    'serviceinfo.workload': {
+      label: '工作量',
+      selected: false
+    },
+    'serviceinfo.status': {
+      label: '项目状态',
+      selected: false
+    },
+    'serviceinfo.start_date': {
+      label: '启动日期',
+      selected: false
+    },
+    'serviceinfo.remark': {
+      label: '备注',
       selected: false
     }
+  }
 
+  get selectedColumns(): string[] {
+    const result = []
+    for (const [key, columnInfo] of Object.entries(this.colKeyOptionInfoMap)) {
+      if (columnInfo.selected) {
+        result.push(key)
+      }
+    }
+    return result
+  }
+
+  get columnOptions(): Dictionary<string>[] {
+    const result = []
+    for (const [key, columnInfo] of Object.entries(this.colKeyOptionInfoMap)) {
+      result.push({
+        value: key,
+        label: columnInfo.label
+      })
+    }
+    return result
   }
 
   private get userOptions(): TransferData[] {
@@ -597,8 +725,21 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
     })
   }
 
-  toggleColumn(command: string) {
-    this.$message('toggleColumn item ' + command)
+  onColumnsChange(selectedColKeys: string[]) {
+    for (const optionInfo of Object.values(this.colKeyOptionInfoMap)) {
+      optionInfo.selected = false
+    }
+    for (const selectedColKey of selectedColKeys) {
+      this.colKeyOptionInfoMap[selectedColKey].selected = true
+    }
+  }
+
+  onSelectedExport() {
+    console.info('onSelectedExport, items: ', this.selectedDataItems)
+  }
+
+  onAllExport() {
+    console.info('onAllExport')
   }
 }
 
