@@ -1,142 +1,133 @@
 <template>
-  <div class="app-container">
-    <el-card class="box-card">
-      <div slot="header">
-        <a
-          class="link-type link-title"
-          target="_blank"
-          href="https://armour.github.io/vue-typescript-admin-docs/guide/advanced/theme.html"
+  <el-container>
+    <el-header>
+      <div style="margin-top:2em;">
+        合同创建
+      </div>
+    </el-header>
+    <el-main>
+      <el-collapse
+        value="basic"
+      >
+        <el-collapse-item
+          title="基础信息"
+          name="basic"
         >
-          {{ $t('theme.documentation') }}
-        </a>
-      </div>
-      <div class="box-item">
-        <span class="field-label">{{ $t('theme.change') }} : </span>
-        <el-switch v-model="theme" />
-        <aside style="margin-top:15px;">
-          {{ $t('theme.tips') }}
-        </aside>
-      </div>
-    </el-card>
-
-    <div class="block">
-      <el-button type="primary">
-        Primary
-      </el-button>
-      <el-button type="success">
-        Success
-      </el-button>
-      <el-button type="info">
-        Info
-      </el-button>
-      <el-button type="warning">
-        Warning
-      </el-button>
-      <el-button type="danger">
-        Danger
-      </el-button>
-    </div>
-
-    <div class="block">
-      <el-button
-        type="primary"
-        icon="el-icon-edit"
-      />
-      <el-button
-        type="primary"
-        icon="el-icon-share"
-      />
-      <el-button
-        type="primary"
-        icon="el-icon-delete"
-      />
-      <el-button
-        type="primary"
-        icon="el-icon-search"
-      >
-        Search
-      </el-button>
-      <el-button type="primary">
-        Upload
-        <i class="el-icon-upload el-icon-right" />
-      </el-button>
-    </div>
-
-    <div class="block">
-      <el-tag
-        v-for="tag in tags"
-        :key="tag.type"
-        :type="tag.type"
-        class="tag-item"
-      >
-        {{ tag.name }}
-      </el-tag>
-    </div>
-
-    <div class="block">
-      <el-radio-group v-model="radio">
-        <el-radio :label="3">
-          Option A
-        </el-radio>
-        <el-radio :label="6">
-          Option B
-        </el-radio>
-        <el-radio :label="9">
-          Option C
-        </el-radio>
-      </el-radio-group>
-    </div>
-
-    <div class="block">
-      <el-slider v-model="slideValue" />
-    </div>
-  </div>
+          <basic-part
+            ref="basicPart"
+            :item="item"
+          />
+        </el-collapse-item>
+        <el-collapse-item title="项目信息">
+          <service-part
+            ref="servicePart"
+            :item="item"
+          />
+        </el-collapse-item>
+        <el-collapse-item title="交接信息">
+          <takeover-part
+            ref="takeoverPart"
+            :item="item"
+            :history-enabled="false"
+          />
+        </el-collapse-item>
+        <el-collapse-item
+          title="备注"
+        >
+          <div> To Be Continued </div>
+        </el-collapse-item>
+      </el-collapse>
+    </el-main>
+  </el-container>
 </template>
 
 <script lang="ts">
-import { Component, Vue, Watch } from 'vue-property-decorator'
-import { toggleClass } from '@/utils'
+import { Component, Vue } from 'vue-property-decorator'
+
 import '@/assets/custom-theme/index.css' // the theme changed version element-ui css
+import { Dictionary } from 'vue-router/types/router'
+import BasicPart from '@/views/contract/contract/basic-part.vue'
+import ServicePart from '@/views/contract/contract/service-part.vue'
+import TakeoverPart from '@/views/contract/contract/takeover-part.vue'
+import { IContractDataWithDetail } from '@/api/types'
+import { AbstractEditPart } from '@/views/mixins/edit-part'
 
 @Component({
-  name: 'Theme'
+  components: {
+    BasicPart,
+    ServicePart,
+    TakeoverPart
+  }
 })
 export default class extends Vue {
-  private theme = false
-  private tags = [
-    { name: 'Tag One', type: '' },
-    { name: 'Tag Two', type: 'info' },
-    { name: 'Tag Three', type: 'success' },
-    { name: 'Tag Four', type: 'warning' },
-    { name: 'Tag Five', type: 'danger' }
-  ]
+  $refs!: {
+    basicPart: BasicPart & AbstractEditPart
+    servicePart: ServicePart & AbstractEditPart
+    takeoverPart: TakeoverPart & AbstractEditPart
+  }
 
-  private slideValue = 50
-  private radio = 3
+  protected queryParams: Dictionary<any> = {
+    customer__in: [] as string[]
+  }
 
-  @Watch('theme')
-  private onThemeChange() {
-    toggleClass(document.body, 'custom-theme')
+  private item: IContractDataWithDetail = {
+    id: 0,
+    customer: 0,
+    contract_num: 'abc',
+    contract_type: '',
+    source: '',
+    signing_date: '',
+    signing_branch: '',
+    sale_agent: 0,
+    probation_until: '',
+    total_amount: 0,
+    referrer: '',
+    supplementary_agreement: '',
+    serviceinfo: {
+      id: 0,
+      contract: 0,
+      enrollment_semester: '20秋',
+      retention_statement: '',
+      target_country_code: '',
+      target_subject: '',
+      target_degree: '',
+      target_major: '',
+      team: '',
+      workload: 0,
+      status: '',
+      start_date: '',
+      remark: ''
+    }
+  }
+
+  mounted() {
+    this.init()
+  }
+
+  init() {
+    const ps = []
+    const loading = this.$loading({
+      lock: true
+    })
+
+    ps.push(this.$refs.basicPart.init())
+    ps.push(this.$refs.servicePart.init())
+    Promise.all(ps).then(() => {
+      // for add we don't do any validations
+      // for (const part of this.parts) {
+      //   this.$refs[part].validate()
+      // }
+    }).catch((err) => {
+      console.error(err)
+    }).finally(() => {
+      loading.close()
+    })
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.field-label {
-  vertical-align: middle;
-}
-
 .box-card {
-  width: 400px;
-  max-width: 100%;
-  margin: 20px auto;
-}
-
-.block {
-  padding: 30px 24px;
-}
-
-.tag-item {
-  margin-right: 15px;
+  margin-bottom: 10px;
 }
 </style>

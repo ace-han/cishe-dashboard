@@ -76,7 +76,6 @@ export interface IContractData {
 export interface IServiceInfoData {
   id?: number
   contract: number
-  'contract_num': string
   'enrollment_semester': string
   'retention_statement': string
   'target_country_code': string
@@ -93,9 +92,7 @@ export interface IServiceInfoData {
 export interface ITakeOverData {
   id?: number
   staff: number
-  'staff_username': string
-  contract: number
-  'contract_num': string
+  contract: number | IContractData
   'transfer_date': string
   remark: string
 }

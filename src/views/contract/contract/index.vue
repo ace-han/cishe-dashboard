@@ -82,12 +82,18 @@
         slot="header"
         class="clearfix"
       >
+        <router-link
+          :to="{
+            path: '/contract/contracts/create'
+          }"
+        >
+          <el-button
+            type="success"
+            icon="el-icon-plus"
+          />
+        </router-link>
         <el-button
-          type="success"
-          icon="el-icon-plus"
-          @click="onCreation"
-        />
-        <el-button
+          style="margin-left: 10px;"
           type="danger"
           icon="el-icon-delete"
           :disabled="isEmptyItemSelection"
@@ -595,25 +601,6 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
     return getContracts(queryParams)
   }
 
-  onCreation() {
-    this.form = {
-      title: '创建',
-      id: 0,
-      contract_num: '',
-      contract_type: '',
-      source: '',
-      signing_date: '',
-      signing_branch: '',
-      sale_agent: 0,
-      probation_until: '',
-      total_amount: 0,
-      referrer: '',
-      supplementary_agreement: ''
-    }
-    this.formDialogVisible = true
-    this.fetchUsers('')
-  }
-
   onSelectedDeletion() {
     if (this.isEmptyItemSelection) {
       this.$notify.warning('请先选择')
@@ -623,13 +610,7 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
   }
 
   onItemEdit(item: IContractDataWithDetail) {
-    this.form = {
-      ...item,
-      title: '编辑',
-      id: item.id || 0
-    }
-    this.formDialogVisible = true
-    this.fetchUsers('')
+    console.info('onItemEdit, item: ', item)
   }
 
   onItemDelete(item: IContractDataWithDetail) {
