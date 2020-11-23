@@ -1,5 +1,9 @@
 import { Moment } from 'moment'
 
+interface IdObject {
+  id?: number
+}
+
 export interface ITransactionData {
   orderId: string
   timestamp: string | number
@@ -58,8 +62,7 @@ export interface ICustomerData {
   major: string
 }
 
-export interface IContractData {
-  id?: number
+export interface IContractData extends IdObject {
   customer: number | ICustomerData
   'contract_num': string
   'contract_type': string

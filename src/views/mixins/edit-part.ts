@@ -1,15 +1,15 @@
 
+import { IdObject } from '@/api/types'
 import { Component, Prop, Vue } from 'vue-property-decorator'
-import _ from 'lodash'
 import { Dictionary } from 'vue-router/types/router'
 
 @Component
-export default class EditPartMixin<T> extends Vue {
+export default class EditPartMixin<T extends IdObject> extends Vue {
   @Prop({ required: true }) protected item!: T
   protected form: Dictionary<any> = {}
 
   get isItemCreation(): boolean {
-    return _.isEmpty(this.item)
+    return !this.item.id
   }
 }
 
