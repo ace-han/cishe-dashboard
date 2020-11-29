@@ -67,10 +67,10 @@
         <el-form-item label="客户来源">
           <model-field-values-select
             v-model="form.source"
+            :select-style="{width: '100%'}"
             model-class-path="django.contrib.auth.models.User"
             model-field-path="username"
             allow-create
-            :style="{width: '100%'}"
           />
         </el-form-item>
         <el-form-item label="签约日期">
@@ -89,12 +89,21 @@
             @keyup.enter.native="submit"
           />
         </el-form-item>
-        <el-form-item label="签约人员">
-          <el-input
+        <el-form-item
+          label="签约人员"
+          prop="sale_agent"
+        >
+          <model-select
             v-model="form.sale_agent"
-            clearable
-            placeholder="模糊匹配"
-            @keyup.enter.native="submit"
+            :select-style="{width: '100%'}"
+            url="/fev1/account/users/"
+            :params="{fields: 'id,username,first_name,last_name'}"
+            :format-item="(item) => ({
+              value: item.id,
+              label: `${item.first_name} ${item.last_name} (${item.username})`,
+              object: item
+            })"
+            :init-func="fetchUsersById"
           />
         </el-form-item>
         <el-form-item label="策划期">
@@ -142,11 +151,14 @@ import EditPartMixin, { AbstractEditPart } from '@/views/mixins/edit-part'
 import { Dictionary } from 'vue-router/types/router'
 import { IContractData } from '@/api/types'
 import ModelFieldValuesSelect from '@/components/ModelFieldValuesSelect/index.vue'
+import ModelSelect from '@/components/ModelSelect/index.vue'
+import { getUsers } from '@/api/users'
 
 @Component({
   name: 'BasicPart',
   components: {
-    ModelFieldValuesSelect
+    ModelFieldValuesSelect,
+    ModelSelect
   }
 })
 export default class extends Mixins<EditPartMixin<IContractData>>(EditPartMixin) implements AbstractEditPart {
@@ -187,6 +199,22 @@ export default class extends Mixins<EditPartMixin<IContractData>>(EditPartMixin)
       message: 'Copy successfully',
       type: 'success'
     })
+  }
+
+  fetchUsersById(q: string): Promise<any[]> {
+    const result = new Promise<any[]>((resolve, reject) => {
+      getUsers({
+        id__in: q,
+        page_size: 20,
+        fields: 'id,username,first_name,last_name'
+      }).then(({ data }) => {
+        resolve(data.results)
+      }).catch((err: any) => {
+        reject(err)
+        this.$notify.error('获取签约人员失败')
+      })
+    })
+    return result
   }
 }
 </script>
