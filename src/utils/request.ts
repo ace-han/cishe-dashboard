@@ -108,6 +108,25 @@ service.interceptors.request.use(
 // Response interceptors
 service.interceptors.response.use(
   (response) => {
+    // will run after transformResponse
+    // and response would be `any` at this time
+
+    // It's 99% that just response.data in this project
+
+    // If we want to change this behaviour,
+    // please set `request.config.headers['X-Response-Style'] = 'Intact-Axios-Response'
+    // then you will get a response as described in doc `AxiosResponse`
+    // keep it as an AxiosResponse<any> or `any`
+    // we just define two separate `AxiosInstance`s
+    console.debug('interceptors.response', response)
+    // If we do it like below, we will have to do request.get<any, ListResponse<SomeType>>(...)
+    // `any` will be around everywhere as well, which is not good
+    // why not go back to just `return response`
+    // if (response.config.headers && response.config.headers['X-Response-Style'] === 'Intact-Axios') {
+    //   return response
+    // } else {
+    //   return response.data
+    // }
     return response
   },
   (error) => {
