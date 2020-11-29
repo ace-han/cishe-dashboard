@@ -27,7 +27,7 @@ import { ListResponse } from '@/api/types'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
 type ValueType = number|number[]|string|string[]
-type FactoryFunc = () => object
+
 @Component({
   name: 'ModelFieldValuesSelect'
 })
@@ -37,12 +37,12 @@ export default class extends Vue {
   @Prop({ default: '' }) readonly value!: ValueType
   @Prop({ default: false }) readonly multiple!: boolean
   @Prop({ default: false }) readonly allowCreate!: boolean
-  @Prop({ default: () => ({}) }) readonly selectStyle!: FactoryFunc
+  @Prop({ default: () => ({}) }) readonly selectStyle!: () => CSSStyleDeclaration
 
   private loading = false
   private items: ValueType[] = []
 
-  created() {
+  mounted() {
     let q = this.value as string
     if (Array.isArray(this.value)) {
       q = this.value.join(',')
@@ -60,9 +60,30 @@ export default class extends Vue {
       value: q,
       page_size: 20
     }
+
+    // this would change the response structure, only interceptor will do
+    // this request.get<T,R>(...), just for using interceptors that will change the return type in `Promise.then`
+    // return request.get<ListResponse<ValueType>, ValueType[]>('/fev1/common/model-field-values/', {
+    //   params
+    //   // transformResponse: [
+    //   //   (request.defaults.transformResponse as AxiosTransformer[])[0],
+    //   //   (data) => {
+    //   //   // will run before interceptors
+    //   //   // at this time, `data` is stringified json string
+    //   //     console.info('ModelFieldValueSelect.doFetchItems.tranformResponse', data)
+    //   //     return data.results
+    //   //   }
+    //   // ]
+    // }).then((data) => {
+    // // }).then(({ data }) => {
+    //   console.info('data', data)
+    //   this.items = data
+    // })
+
     return request.get<ListResponse<ValueType>>('/fev1/common/model-field-values/', {
       params
     }).then(({ data }) => {
+      console.debug('results', data)
       this.items = data.results
     }).catch((err: any) => {
       console.error(err)
@@ -73,7 +94,7 @@ export default class extends Vue {
   }
 
   onChange(selectedValue: ValueType) {
-    this.$emit('update', selectedValue)
+    this.$emit('input', selectedValue)
   }
 }
 </script>
