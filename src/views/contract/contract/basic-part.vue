@@ -43,26 +43,35 @@
               </i>
             </el-tooltip>
           </div>
-          <el-input
-            v-model="form.contract_type"
-            clearable
-            placeholder="模糊匹配"
-            @keyup.enter.native="submit"
+          <model-field-values-select
+            v-model="form.source"
+            :select-style="{width: '100%'}"
+            model-class-path="cishe.contract.models.Contract"
+            model-field-path="source"
+            allow-create
           />
         </el-form-item>
-        <el-form-item label="学生">
-          <el-select
-            value="abc"
-            style="width: 88%;"
-          >
-            <el-option value="abc" />
-            <el-option value="def" />
-          </el-select>
+        <el-form-item
+          label="学生"
+          prop="customer"
+        >
+          <model-select
+            ref="customerSelect"
+            v-model="form.customer"
+            :select-style="{width: '90%'}"
+            url="/fev1/contract/customers/"
+            :params="{fields: 'id,name,phone_num'}"
+            :format-item="(item) => ({
+              value: item.id,
+              label: `${item.name} (${item.phone_num})`,
+              object: item
+            })"
+            :init-func="fetchCustomersById"
+          />
           <el-button
             icon="el-icon-plus"
-          >
-            Add
-          </el-button>
+            @click="onAddCustomer"
+          />
         </el-form-item>
         <el-form-item label="客户来源">
           <model-field-values-select
@@ -73,20 +82,28 @@
             allow-create
           />
         </el-form-item>
-        <el-form-item label="签约日期">
-          <el-input
+        <el-form-item
+          label="签约日期"
+          prop="signing_date"
+        >
+          <el-date-picker
             v-model="form.signing_date"
             clearable
-            placeholder="模糊匹配"
-            @keyup.enter.native="submit"
+            placeholder="日期"
+            type="date"
+            :style="{width: '100%'}"
           />
         </el-form-item>
-        <el-form-item label="签约分公司">
-          <el-input
+        <el-form-item
+          label="签约分公司"
+          prop="signing_branch"
+        >
+          <model-field-values-select
             v-model="form.signing_branch"
-            clearable
-            placeholder="模糊匹配"
-            @keyup.enter.native="submit"
+            :select-style="{width: '100%'}"
+            model-class-path="cishe.contract.models.Contract"
+            model-field-path="signing_branch"
+            allow-create
           />
         </el-form-item>
         <el-form-item
@@ -106,40 +123,62 @@
             :init-func="fetchUsersById"
           />
         </el-form-item>
-        <el-form-item label="策划期">
-          <el-input
+        <el-form-item
+          label="策划期"
+          prop="probation_until"
+        >
+          <el-date-picker
             v-model="form.probation_until"
             clearable
-            placeholder="模糊匹配"
-            @keyup.enter.native="submit"
+            placeholder="日期"
+            type="date"
+            :style="{width: '100%'}"
           />
         </el-form-item>
-        <el-form-item label="合同价格">
-          <el-input
+        <el-form-item
+          label="合同价格"
+          prop="total_amount"
+        >
+          <el-input-number
             v-model="form.total_amount"
+            :min="1000"
+            :step="500"
+            :precision="0"
             clearable
             placeholder="模糊匹配"
-            @keyup.enter.native="submit"
           />
         </el-form-item>
-        <el-form-item label="介绍人">
-          <el-input
+        <el-form-item
+          label="介绍人"
+          prop="referrer"
+        >
+          <model-field-values-select
             v-model="form.referrer"
-            clearable
-            placeholder="模糊匹配"
-            @keyup.enter.native="submit"
+            :select-style="{width: '100%'}"
+            model-class-path="cishe.contract.models.Contract"
+            model-field-path="referrer"
+            allow-create
           />
         </el-form-item>
-        <el-form-item label="补充协议">
+        <el-form-item
+          label="补充协议"
+          prop="supplementary_agreement"
+        >
           <el-input
             v-model="form.supplementary_agreement"
             clearable
-            placeholder="模糊匹配"
-            @keyup.enter.native="submit"
+            placeholder="协议内容"
+            type="textarea"
+            :autosize="{minRows: 3, maxRows: 6}"
           />
         </el-form-item>
       </el-row>
     </el-form>
+    <customer-form
+      :visible.sync="customerFormDialogVisible"
+      :form="customerForm"
+      @success="onCustomerSuccessCreation"
+    />
   </div>
 </template>
 
@@ -149,16 +188,19 @@ import { Component, Mixins } from 'vue-property-decorator'
 import '@/assets/custom-theme/index.css' // the theme changed version element-ui css
 import EditPartMixin, { AbstractEditPart } from '@/views/mixins/edit-part'
 import { Dictionary } from 'vue-router/types/router'
-import { IContractData } from '@/api/types'
+import { IContractData, ICustomerData } from '@/api/types'
 import ModelFieldValuesSelect from '@/components/ModelFieldValuesSelect/index.vue'
 import ModelSelect from '@/components/ModelSelect/index.vue'
 import { getUsers } from '@/api/users'
+import { getCustomers } from '@/api/customers'
+import CustomerForm from '@/views/contract/customers/form.vue'
 
 @Component({
   name: 'BasicPart',
   components: {
     ModelFieldValuesSelect,
-    ModelSelect
+    ModelSelect,
+    CustomerForm
   }
 })
 export default class extends Mixins<EditPartMixin<IContractData>>(EditPartMixin) implements AbstractEditPart {
@@ -175,6 +217,20 @@ export default class extends Mixins<EditPartMixin<IContractData>>(EditPartMixin)
     total_amount: 0,
     referrer: '',
     supplementary_agreement: ''
+  }
+
+  private customerFormDialogVisible = false
+  private customerForm: ICustomerData = {
+    id: 0,
+    name: '',
+    phone_num: '',
+    phone_num2: '',
+    email: '',
+    parent_phone_num: '',
+    parent_type: '',
+    university: '',
+    department: '',
+    major: ''
   }
 
   init(): Promise<Dictionary<any>> {
@@ -215,6 +271,45 @@ export default class extends Mixins<EditPartMixin<IContractData>>(EditPartMixin)
       })
     })
     return result
+  }
+
+  fetchCustomersById(q: string): Promise<any[]> {
+    const result = new Promise<any[]>((resolve, reject) => {
+      getCustomers({
+        id__in: q,
+        page_size: 20,
+        fields: 'id,name,phone_num'
+      }).then(({ data }) => {
+        resolve(data.results)
+      }).catch((err: any) => {
+        reject(err)
+        this.$notify.error('获取学生失败')
+      })
+    })
+    return result
+  }
+
+  onAddCustomer() {
+    this.customerForm = {
+      id: 0,
+      name: '',
+      phone_num: '',
+      phone_num2: '',
+      email: '',
+      parent_phone_num: '',
+      parent_type: '',
+      university: '',
+      department: '',
+      major: ''
+    }
+    this.customerFormDialogVisible = true
+  }
+
+  onCustomerSuccessCreation(customer: ICustomerData) {
+    this.form.customer = customer.id || 0
+    this.$nextTick(() => {
+      (this.$refs.customerSelect as ModelSelect).doFetchItems(customer.name)
+    })
   }
 }
 </script>

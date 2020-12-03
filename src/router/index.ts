@@ -158,7 +158,7 @@ export const asyncRoutes: RouteConfig[] = [
     children: [
       {
         path: 'customers',
-        component: () => import(/* webpackChunkName: "contract-customers" */ '@/views/contract/customers.vue'),
+        component: () => import(/* webpackChunkName: "contract-customers" */ '@/views/contract/customers/index.vue'),
         name: 'ContractCustomers',
         meta: {
           title: 'contractCustomers'
