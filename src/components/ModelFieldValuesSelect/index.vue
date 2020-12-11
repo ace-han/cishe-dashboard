@@ -1,6 +1,7 @@
 <template>
   <el-select
     :value="value"
+    clearable
     filterable
     remote
     reserve-keyword
@@ -13,7 +14,7 @@
     @change="onChange"
   >
     <el-option
-      v-for="item in items"
+      v-for="item in optionItems"
       :key="item"
       :value="item"
     />
@@ -26,7 +27,7 @@ import request from '@/utils/request'
 import { ListResponse } from '@/api/types'
 import { Component, Prop, Vue } from 'vue-property-decorator'
 
-type ValueType = number|number[]|string|string[]
+type ValueType = number|string
 
 @Component({
   name: 'ModelFieldValuesSelect'
@@ -41,6 +42,17 @@ export default class extends Vue {
 
   private loading = false
   private items: ValueType[] = []
+
+  get optionItems() {
+    const result: ValueType[] = []
+    for (const item of this.items) {
+      if (!item && item !== 0) {
+        continue
+      }
+      result.push(item)
+    }
+    return result
+  }
 
   mounted() {
     let q = this.value as string
