@@ -94,7 +94,7 @@ export interface IServiceInfoData {
 
 export interface ITakeOverData {
   id?: number
-  staff: number
+  staff: number | IUserData
   contract: number | IContractData
   'transfer_date': string
   remark: string

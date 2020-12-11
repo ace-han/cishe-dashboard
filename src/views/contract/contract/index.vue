@@ -591,7 +591,7 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
   protected doPrepareFetchParams(): Dictionary<any> {
     const result = {
       ...this.queryParams,
-      expand: 'users',
+      expand: 'customer,sale_agent,serviceinfo,takeovers',
       ordering: '-id'
     }
     return result

@@ -69,21 +69,13 @@
         label="家长类型"
         prop="parent_type"
       >
-        <el-select
+        <model-field-values-select
           v-model="form.parent_type"
-          clearable
-          filterable
-          class="filter-item"
-        >
-          <el-option
-            value="father"
-            label="父亲"
-          />
-          <el-option
-            value="mother"
-            label="母亲"
-          />
-        </el-select>
+          :select-style="{width: '100%'}"
+          model-class-path="cishe.contract.models.Customer"
+          model-field-path="parent_type"
+          allow-create
+        />
       </el-form-item>
       <el-form-item
         label="大学"
@@ -137,9 +129,13 @@ import { Component, Prop, Vue } from 'vue-property-decorator'
 import { ICustomerData } from '@/api/types'
 import { createCustomer, partialUpdateCustomer } from '@/api/customers'
 import { ElForm } from 'element-ui/types/form'
+import ModelFieldValuesSelect from '@/components/ModelFieldValuesSelect/index.vue'
 
 @Component({
-  name: 'CustomerForm'
+  name: 'CustomerForm',
+  components: {
+    ModelFieldValuesSelect
+  }
 })
 export default class extends Vue {
   @Prop({ required: true }) readonly visible!: boolean

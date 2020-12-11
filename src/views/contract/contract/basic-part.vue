@@ -1,7 +1,10 @@
 <template>
   <div>
     <el-form
+      v-if="inited"
+      ref="form"
       :model="form"
+      :rules="rules"
       label-width="10em"
     >
       <el-row>
@@ -28,7 +31,7 @@
           </el-input>
         </el-form-item>
         <el-form-item prop="contract_type">
-          <div slot="label">
+          <span slot="label">
             <el-tooltip
               placement="top"
             >
@@ -42,12 +45,12 @@
                 合同类型
               </i>
             </el-tooltip>
-          </div>
+          </span>
           <model-field-values-select
-            v-model="form.source"
+            v-model="form.contract_type"
             :select-style="{width: '100%'}"
             model-class-path="cishe.contract.models.Contract"
-            model-field-path="source"
+            model-field-path="contract_type"
             allow-create
           />
         </el-form-item>
@@ -73,12 +76,15 @@
             @click="onAddCustomer"
           />
         </el-form-item>
-        <el-form-item label="客户来源">
+        <el-form-item
+          label="客户来源"
+          prop="source"
+        >
           <model-field-values-select
             v-model="form.source"
             :select-style="{width: '100%'}"
-            model-class-path="django.contrib.auth.models.User"
-            model-field-path="username"
+            model-class-path="cishe.contract.models.Contract"
+            model-field-path="source"
             allow-create
           />
         </el-form-item>
@@ -145,7 +151,7 @@
             :step="500"
             :precision="0"
             clearable
-            placeholder="模糊匹配"
+            placeholder="1000起步"
           />
         </el-form-item>
         <el-form-item
@@ -184,7 +190,7 @@
 
 <script lang="ts">
 import { Component, Mixins } from 'vue-property-decorator'
-
+import moment from 'moment'
 import '@/assets/custom-theme/index.css' // the theme changed version element-ui css
 import EditPartMixin, { AbstractEditPart } from '@/views/mixins/edit-part'
 import { Dictionary } from 'vue-router/types/router'
@@ -233,21 +239,88 @@ export default class extends Mixins<EditPartMixin<IContractData>>(EditPartMixin)
     major: ''
   }
 
+  private rules = {
+    customer: [
+      { type: 'number', required: true, trigger: 'blur' }
+    ],
+    contract_type: [
+      { required: true, trigger: 'blur' },
+      { min: 1, max: 8, message: '最大长度8字符', trigger: 'change' }
+    ],
+    source: [
+      { max: 8, message: '最大长度8字符', trigger: 'change' }
+    ],
+    signing_date: [
+      { required: true, trigger: 'change' }
+    ],
+    signing_branch: [
+      { max: 4, message: '最大长度150字符', trigger: 'change' }
+    ],
+    sale_agent: [
+      { type: 'number', required: true, trigger: 'blur' }
+    ],
+    probation_until: [
+      { required: true, trigger: 'blur' }
+    ],
+    total_amount: [
+      { type: 'number', required: true, trigger: 'change' }
+    ],
+    referrer: [
+      { max: 32, message: '最大长度32字符', trigger: 'change' }
+    ],
+    supplementary_agreement: [
+      { max: 2000, message: '最大长度150字符', trigger: 'change' }
+    ]
+  }
+
   init(): Promise<Dictionary<any>> {
     for (const [k, v] of Object.entries(this.item)) {
       if (k in this.form) {
         this.form[k] = v
       }
     }
+    if (!this.form.customer) {
+      this.form.customer = ''
+    }
+    if (!this.form.sale_agent) {
+      this.form.sale_agent = ''
+    }
+    this.inited = true
     return Promise.resolve(this.form)
   }
 
   validate(): Promise<string[]> {
-    return Promise.resolve([])
+    // debugging in element-ui.common.js#2300@validate,
+    // found that promise catch only gets the `valid`, no `invalidFields`
+    // this.$refs[formName].validate().then(() => {
+    //   console.info('submitForm success')
+    // }).catch((err, fields) => {
+    //   console.error('sumitForm promise', err, fields)
+    // })
+    const result = new Promise<string[]>((resolve, reject) => {
+      this.$refs.form.validate((valid, invalidFields) => {
+        const errors:string[] = []
+        if (valid) {
+          resolve(errors)
+        } else {
+          for (const error of Object.values(invalidFields)) {
+            errors.push(error)
+          }
+          reject(errors)
+        }
+      })
+    })
+    return result
   }
 
   serialize(): Dictionary<any> {
-    return this.item
+    const result = {
+      ...this.form,
+      probation_until: moment(this.form.probation_until).utc().format(),
+      signing_date: moment(this.form.signing_date).utc().format()
+    }
+    console.info('basic-part serialize', result)
+    return result
   }
 
   clipboardSuccess() {

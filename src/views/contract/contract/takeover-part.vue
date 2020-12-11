@@ -1,23 +1,39 @@
 <template>
   <div>
     <el-form
+      ref="form"
       :model="form"
+      :rules="rules"
       label-width="10em"
     >
-      <el-form-item label="咨询师">
-        <el-input
-          v-model="form.remark"
-          clearable
-          placeholder="模糊匹配"
-          @keyup.enter.native="submit"
+      <el-form-item
+        label="咨询师"
+        prop="staff"
+        :required="isItemCreation"
+      >
+        <model-select
+          v-model="form.staff"
+          :select-style="{width: '100%'}"
+          url="/fev1/account/users/"
+          :params="{fields: 'id,username,first_name,last_name'}"
+          :format-item="(item) => ({
+            value: item.id,
+            label: `${item.first_name} ${item.last_name} (${item.username})`,
+            object: item
+          })"
+          :init-func="fetchUsersById"
         />
       </el-form-item>
-      <el-form-item label="备注">
+      <el-form-item
+        label="备注"
+        prop="remark"
+      >
         <el-input
           v-model="form.remark"
           clearable
-          placeholder="模糊匹配"
-          @keyup.enter.native="submit"
+          placeholder="备注内容"
+          type="textarea"
+          :autosize="{minRows: 3, maxRows: 6}"
         />
       </el-form-item>
     </el-form>
@@ -60,16 +76,9 @@
         label="备注"
       />
       <el-table-column
-        label="操作人"
+        label="操作"
       >
         <template slot-scope="{row}">
-          <el-button
-            size="small"
-            icon="el-icon-edit"
-            @click="onRecordEdit(row)"
-          >
-            编辑
-          </el-button>
           <el-button
             size="small"
             icon="el-icon-delete"
@@ -79,59 +88,185 @@
           </el-button>
         </template>
       </el-table-column>
-      <el-table-column
-        label="操作"
-      >
-        <template slot-scope="{row}">
-          {{ row.staff.first_name }} ({{ row.staff.username }})
-        </template>
-      </el-table-column>
     </el-table>
   </div>
 </template>
 
 <script lang="ts">
+import moment from 'moment'
 import { Component, Mixins, Prop } from 'vue-property-decorator'
 
 import '@/assets/custom-theme/index.css' // the theme changed version element-ui css
 import EditPartMixin, { AbstractEditPart } from '@/views/mixins/edit-part'
 import { Dictionary } from 'vue-router/types/router'
-import { IContractDataWithDetail, ITakeOverData } from '@/api/types'
+import { IContractDataWithDetail, ITakeOverData, IUserData } from '@/api/types'
+import ModelSelect from '@/components/ModelSelect/index.vue'
+import { getUsers } from '@/api/users'
+import { deleteTakeOvers, getTakeOvers } from '@/api/takeovers'
 
 @Component({
-  name: 'TakeoverPart'
+  name: 'TakeoverPart',
+  components: {
+    ModelSelect
+  }
 })
 export default class extends Mixins<EditPartMixin<IContractDataWithDetail>>(EditPartMixin) implements AbstractEditPart {
+  @Prop({ required: true }) readonly historyEnabled!: boolean
   protected form: Dictionary<any> = {
-    staff: 0,
+    staff: '',
     contract: '',
     transfer_date: '',
-    remark: '',
-    comment_by: ''
+    remark: ''
   }
 
-  @Prop({ required: true }) private historyEnabled = false
+  private rules = {
+    staff: [
+      {
+        validator: (rule: Dictionary<any>, value: string | number) => {
+          const errors = []
+          if (this.isItemCreation) {
+            if (!value) {
+              errors.push(new Error('staff is required'))
+            }
+            if (isNaN((value as number))) {
+              errors.push(new Error('staff is not a number'))
+            }
+          } else {
+            if (value && isNaN((value as number))) {
+              errors.push(new Error('staff is not a number'))
+            }
+          }
+          // do not follow async-validator doc, trust debugging
+          // return errors
+          // callback(errors)
+          if (errors.length) {
+            return Promise.reject(errors)
+          } else {
+            return Promise.resolve()
+          }
+        },
+        trigger: 'blur'
+      }
+    ],
+    remark: [
+      { max: 2000, message: '最大长度2000字符', trigger: 'change' }
+    ]
+  }
+
   private takeoversLoading = false
-  private takeovers = []
+  private takeovers: ITakeOverData[] = []
 
   init(): Promise<Dictionary<any>> {
-    return Promise.resolve(this.form)
+    let ps: Promise<Dictionary<any>>
+    if (this.isItemCreation) {
+      ps = Promise.resolve(this.form)
+    } else {
+      this.takeoversLoading = true
+      ps = new Promise<Dictionary<any>>((resolve) => {
+        const params = {
+          contract: this.item.id,
+          page_size: 999,
+          expand: 'staff',
+          ordering: '-transfer_date'
+        }
+        getTakeOvers(params).then(({ data }) => {
+          this.takeovers = data.results
+          resolve(this.form)
+        }).finally(() => {
+          this.takeoversLoading = false
+        })
+      })
+    }
+    return ps
   }
 
   validate(): Promise<string[]> {
-    return Promise.resolve([])
+    // debugging in element-ui.common.js#2300@validate,
+    // found that promise catch only gets the `valid`, no `invalidFields`
+    // this.$refs[formName].validate().then(() => {
+    //   console.info('submitForm success')
+    // }).catch((err, fields) => {
+    //   console.error('sumitForm promise', err, fields)
+    // })
+    const result = new Promise<string[]>((resolve, reject) => {
+      this.$refs.form.validate((valid, invalidFields) => {
+        const errors:string[] = []
+        if (valid) {
+          resolve(errors)
+        } else {
+          for (const error of Object.values(invalidFields)) {
+            errors.push(error)
+          }
+          reject(errors)
+        }
+      })
+    })
+    return result
   }
 
   serialize(): Dictionary<any> {
-    return this.item
+    const result = {
+      ...this.form,
+      transfer_date: moment.utc().format()
+    }
+    console.info('takeover-part serialize', result)
+    return result
   }
 
-  onRecordEdit(record: ITakeOverData) {
-    console.info('onRecordEdit, record: ', record)
-  }
+  // onRecordEdit(record: ITakeOverData) {
+  //   console.info('onRecordEdit, record: ', record)
+  // }
 
   onRecordDelete(record: ITakeOverData) {
-    console.info('onRecordDelete, record: ', record)
+    this.deleteRecords([record])
+  }
+
+  deleteRecords(records: ITakeOverData[]) {
+    const content = ['确认删除以下吗?']
+    const selected = [] as number[]
+    for (const record of records) {
+      selected.push(record.id || 0)
+      content.push(`${(record.staff as IUserData).username}(${record.id})`)
+    }
+
+    this.$confirm(content.join('<br/>'), '确认', {
+      dangerouslyUseHTMLString: true,
+      type: 'warning'
+    }).then(() => {
+      // confirmed
+      const params = {
+        id__in: selected.join(',')
+      }
+      const loading = this.$loading({
+        lock: true
+      })
+      deleteTakeOvers(params).then(() => {
+        this.$notify.success('操作成功')
+      }).catch((err: any) => {
+        console.error(err)
+        this.$notify.error('操作失败')
+      }).finally(() => {
+        loading.close()
+      })
+    }).catch(() => {
+      this.$message('操作取消')
+    })
+  }
+
+  fetchUsersById(q: string): Promise<any[]> {
+    const result = new Promise<any[]>((resolve, reject) => {
+      getUsers({
+        id__in: q,
+        page_size: 20,
+        fields: 'id,username,first_name,last_name'
+      }).then(({ data }) => {
+        resolve(data.results)
+      }).catch((err: any) => {
+        reject(err)
+        this.$notify.error('获取签约人员失败')
+      })
+    })
+    return result
   }
 }
 </script>

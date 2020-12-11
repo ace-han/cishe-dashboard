@@ -188,8 +188,10 @@ export const asyncRoutes: RouteConfig[] = [
         path: 'contracts/:id/edit',
         component: () => import(/* webpackChunkName: "contract-contract-edit" */ '@/views/contract/contract/edit.vue'),
         name: 'ContractContractEdit',
+        props: true,
         meta: {
           title: 'contractContractEdit',
+          noCache: true,
           hidden: true
         }
       }
