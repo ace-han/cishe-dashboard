@@ -18,6 +18,7 @@ import '@/utils/error-log'
 import '@/pwa/register-service-worker'
 import * as directives from '@/directives'
 import * as filters from '@/filters'
+import { Component } from 'vue-property-decorator'
 
 Vue.use(ElementUI, {
   size: AppModule.size, // Set element-ui default size
@@ -41,6 +42,12 @@ Object.keys(filters).forEach(key => {
 })
 
 Vue.config.productionTip = false
+
+Component.registerHooks([
+  'beforeRouteEnter',
+  'beforeRouteLeave',
+  'beforeRouteUpdate'
+])
 
 new Vue({
   router,
