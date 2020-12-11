@@ -1,6 +1,7 @@
 <template>
   <el-select
     :value="value"
+    clearable
     filterable
     remote
     reserve-keyword
