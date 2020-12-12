@@ -29,6 +29,7 @@
             <model-select
               v-model="queryParams.customer__name__in"
               url="/fev1/contract/customers/"
+              multiple
               :params="{fields: 'id,name,phone_num'}"
               :format-item="(item) => ({
                 value: item.name,
@@ -61,7 +62,7 @@
             <model-field-values-select
               v-model="queryParams.serviceinfo__target_major__oricontains"
               model-class-path="cishe.contract.models.ServiceInfo"
-              model-field-path="enrollment_semester"
+              model-field-path="target_major"
               allow-create
               multiple
               :format-items="formCSVItems"
@@ -71,6 +72,7 @@
             <model-select
               v-model="queryParams.last_counselor__username__in"
               url="/fev1/account/users/"
+              multiple
               :params="{fields: 'id,username,first_name,last_name'}"
               :format-item="(item) => ({
                 value: item.username,
@@ -80,9 +82,10 @@
               :init-func="fetchCounselorsByUsername"
             />
           </el-form-item>
-          <el-form-item label="签约日期">
+
+          <el-form-item label="策划期">
             <el-date-picker
-              v-model="queryParams.signing_date__range"
+              v-model="queryParams.probation_until__range"
               type="daterange"
               clearable
               start-placeholder="From"
@@ -90,9 +93,9 @@
               value-format="yyyy-MM-dd HH:mm:ss"
             />
           </el-form-item>
-          <el-form-item label="策划期">
+          <el-form-item label="签约日期">
             <el-date-picker
-              v-model="queryParams.probation_until__range"
+              v-model="queryParams.signing_date__range"
               type="daterange"
               clearable
               start-placeholder="From"
@@ -197,6 +200,11 @@
           </template>
         </el-table-column>
         <el-table-column
+          v-if="colKeyOptionInfoMap['serviceinfo.enrollment_semester'].selected"
+          property="serviceinfo.enrollment_semester"
+          label="申请季"
+        />
+        <el-table-column
           v-if="colKeyOptionInfoMap['serviceinfo.target_country_code'].selected"
           label="申请国家"
         >
@@ -213,25 +221,69 @@
           </template>
         </el-table-column>
         <el-table-column
+          v-if="colKeyOptionInfoMap['takeovers'].selected"
+          label="咨询师"
+        >
+          <template slot-scope="{row}">
+            <el-tooltip
+              v-if="row.takeovers.length>1"
+              placement="top"
+              effect="light"
+            >
+              <div slot="content">
+                <el-table
+                  border
+                  fit
+                  stripe
+                  :data="row.takeovers.slice(1)"
+                >
+                  <el-table-column
+                    property="id"
+                    label="ID"
+                  />
+                  <el-table-column
+                    label="咨询师"
+                  >
+                    <template slot-scope="scope">
+                      {{ scope.row.counselor.first_name }} {{ scope.row.counselor.last_name }} ({{ scope.row.counselor.username }})
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    label="交接日期"
+                  >
+                    <template slot-scope="scope">
+                      {{ scope.row.transfer_date | parseMoment('YYYY-MM-DD') }}
+                    </template>
+                  </el-table-column>
+
+                  <el-table-column
+                    property="remark"
+                    label="备注"
+                  />
+                </el-table>
+              </div>
+              <i class="el-icon-info">
+                {{ row.takeovers[0].counselor.first_name }} {{ row.takeovers[0].counselor.last_name }} ({{ row.takeovers[0].counselor.username }})
+              </i>
+            </el-tooltip>
+            <span v-else>{{ row.takeovers[0].counselor.first_name }} {{ row.takeovers[0].counselor.last_name }} ({{ row.takeovers[0].counselor.username }})</span>
+          </template>
+        </el-table-column>
+        <el-table-column
           v-if="colKeyOptionInfoMap['probation_until'].selected"
           label="策划期"
         >
           <template slot-scope="{row}">
-            <span>{{ row.probation_until | parseMoment }}</span>
+            <span>{{ row.probation_until | parseMoment('YYYY-MM-DD') }}</span>
           </template>
         </el-table-column>
         <el-table-column
-          v-if="colKeyOptionInfoMap['sale_agent.username'].selected"
-          label="签约人员"
+          v-if="colKeyOptionInfoMap['signing_date'].selected"
+          property="signing_date"
+          label="签约日期"
         >
           <template slot-scope="{row}">
-            <el-link
-              type="info"
-              :href="`/#/organization/members?search=${ row.sale_agent.username }}`"
-              target="_blank"
-            >
-              {{ row.sale_agent.username }} ({{ row.sale_agent.id }})
-            </el-link>
+            <span>{{ row.signing_date | parseMoment('YYYY-MM-DD') }}</span>
           </template>
         </el-table-column>
         <!--
@@ -262,20 +314,26 @@
           property="source"
           label="客户来源"
         />
-        <el-table-column
-          v-if="colKeyOptionInfoMap['signing_date'].selected"
-          property="signing_date"
-          label="签约日期"
-        >
-          <template slot-scope="{row}">
-            <span>{{ row.signing_date | parseMoment('YYYY-MM-DD') }}</span>
-          </template>
-        </el-table-column>
+
         <el-table-column
           v-if="colKeyOptionInfoMap['signing_branch'].selected"
           property="signing_branch"
-          label="签约子公司"
+          label="签约分公司"
         />
+        <el-table-column
+          v-if="colKeyOptionInfoMap['sale_agent.username'].selected"
+          label="签约人员"
+        >
+          <template slot-scope="{row}">
+            <el-link
+              type="info"
+              :href="`/#/organization/members?search=${ row.sale_agent.username }}`"
+              target="_blank"
+            >
+              {{ row.sale_agent.first_name }} {{ row.sale_agent.last_name }} ({{ row.sale_agent.username }})
+            </el-link>
+          </template>
+        </el-table-column>
         <el-table-column
           v-if="colKeyOptionInfoMap['referrer'].selected"
           property="referrer"
@@ -296,11 +354,7 @@
           property="serviceinfo.id"
           label="服务项目ID"
         />
-        <el-table-column
-          v-if="colKeyOptionInfoMap['serviceinfo.enrollment_semester'].selected"
-          property="serviceinfo.enrollment_semester"
-          label="申请季"
-        />
+
         <el-table-column
           v-if="colKeyOptionInfoMap['serviceinfo.retention_statement'].selected"
           property="serviceinfo.retention_statement"
@@ -460,7 +514,8 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
     serviceinfo__target_major__oricontains: [] as string[],
     last_counselor__username__in: [] as string[],
     signing_date__range: [] as string[],
-    probation_until__range: [] as string[]
+    probation_until__range: [] as string[],
+    selectedCols: ''
   }
 
   private formDialogVisible = false
@@ -502,6 +557,10 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
       label: '学生姓名',
       selected: true
     },
+    'serviceinfo.enrollment_semester': {
+      label: '申请季',
+      selected: true
+    },
     'serviceinfo.target_country_code': {
       label: '申请国家',
       selected: true
@@ -510,12 +569,16 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
       label: '申请专业',
       selected: true
     },
+    takeovers: {
+      label: '咨询师',
+      selected: true
+    },
     probation_until: {
       label: '策划期',
       selected: true
     },
-    'sale_agent.username': {
-      label: '签约人',
+    signing_date: {
+      label: '签约日期',
       selected: true
     },
     total_amount: {
@@ -534,12 +597,13 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
       label: '客户来源',
       selected: false
     },
-    signing_date: {
-      label: '签约日期',
+
+    signing_branch: {
+      label: '签约分公司',
       selected: false
     },
-    signing_branch: {
-      label: '签约子公司',
+    'sale_agent.username': {
+      label: '签约人',
       selected: false
     },
     referrer: {
@@ -554,10 +618,7 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
       label: '服务项目ID',
       selected: false
     },
-    'serviceinfo.enrollment_semester': {
-      label: '申请季',
-      selected: false
-    },
+
     'serviceinfo.retention_statement': {
       label: '延期描述',
       selected: false
@@ -625,14 +686,52 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
     return result
   }
 
+  mounted() {
+    // col display analysing
+    if (this.$route.query.selectedCols) {
+      const selectedCols = (this.$route.query.selectedCols as string).split(',')
+      for (const columnInfo of Object.values(this.colKeyOptionInfoMap)) {
+        columnInfo.selected = false
+      }
+      for (const colKey of selectedCols) {
+        this.colKeyOptionInfoMap[colKey].selected = true
+      }
+    }
+  }
+
   private fetchUsers = _.debounce(this.doFetchUsers, 300)
 
   protected doPrepareFetchParams(): Dictionary<any> {
-    const result = {
+    const result: Dictionary<any> = {
       ...this.queryParams,
-      expand: 'customer,sale_agent,serviceinfo,takeovers',
+      expand: 'customer,sale_agent,serviceinfo,takeovers.counselor',
       ordering: '-id'
     }
+    delete result.selectedCols
+    const commanSepFields = [
+      'customer__name__in',
+      'serviceinfo__enrollment_semester__in',
+      'serviceinfo__target_country_code__oricontains',
+      'serviceinfo__target_major__oricontains',
+      'last_counselor__username__in'
+    ]
+    for (const field of commanSepFields) {
+      result[field] = this.queryParams[field].join(',')
+    }
+    const dateRangeFields = [
+      'signing_date__range',
+      'probation_until__range'
+    ]
+    for (const field of dateRangeFields) {
+      const dateRange = this.queryParams[field]
+      if (dateRange && dateRange.length) {
+        result[field] = [
+          moment(dateRange[0]).utc().format(),
+          moment(dateRange[1]).utc().format()
+        ].join(',')
+      }
+    }
+
     return result
   }
 
@@ -649,7 +748,12 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
   }
 
   onItemEdit(item: IContractDataWithDetail) {
-    console.info('onItemEdit, item: ', item)
+    this.$router.push({
+      name: 'ContractContractEdit',
+      params: {
+        id: item.id + ''
+      }
+    })
   }
 
   onItemDelete(item: IContractDataWithDetail) {
@@ -752,6 +856,7 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
     for (const selectedColKey of selectedColKeys) {
       this.colKeyOptionInfoMap[selectedColKey].selected = true
     }
+    this.queryParams.selectedCols = selectedColKeys.join(',')
   }
 
   onSelectedExport() {
@@ -765,7 +870,7 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
   fetchCounselorsByUsername(q: string): Promise<any[]> {
     const result = new Promise<any[]>((resolve, reject) => {
       getUsers({
-        id__in: q,
+        username__in: q,
         page_size: 20,
         fields: 'id,username,first_name,last_name'
       }).then(({ data }) => {
@@ -781,7 +886,7 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
   fetchCustomersByName(q: string): Promise<ICustomerData[]> {
     const result = new Promise<ICustomerData[]>((resolve, reject) => {
       getCustomers({
-        id__in: q,
+        name__in: q,
         page_size: 20,
         fields: 'id,name,phone_num'
       }).then(({ data }) => {
