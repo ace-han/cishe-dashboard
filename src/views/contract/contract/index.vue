@@ -213,6 +213,29 @@
           v-if="colKeyOptionInfoMap['serviceinfo.target_country_code'].selected"
           label="申请国家"
         >
+          <template slot="header">
+            <el-tooltip
+              placement="top"
+            >
+              <div slot="content">
+                国家代码 (ISO 3166-1)<br><br>
+                美国:  US<br>
+                英国: UK<br>
+                香港: HK<br>
+                新加坡: SG<br>
+                澳大利亚: AU<br>
+                法国: FR<br>
+                德国: DE<br>
+              </div>
+              <el-link
+                href="https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2"
+                icon="el-icon-info"
+                target="_blank"
+              >
+                申请国家
+              </el-link>
+            </el-tooltip>
+          </template>
           <template slot-scope="{row}">
             <span>{{ row.serviceinfo.target_country_code }}</span>
           </template>
