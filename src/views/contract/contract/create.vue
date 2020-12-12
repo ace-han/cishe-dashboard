@@ -159,7 +159,7 @@ export default class extends Vue {
           }
           return Promise.resolve(this.item)
         } else {
-          return Promise.reject(new Error(`Contract ID: '${this.id}' doest not exist`))
+          return Promise.reject(new Error(`Contract ID: '${contractId}' doest not exist`))
         }
       }).catch((err: any) => {
         console.error(err)

@@ -21,7 +21,7 @@
             label: `${item.first_name} ${item.last_name} (${item.username})`,
             object: item
           })"
-          :init-func="fetchUsersById"
+          :init-func="fetchCounselorsById"
         />
       </el-form-item>
       <el-form-item
@@ -253,8 +253,8 @@ export default class extends Mixins<EditPartMixin<IContractDataWithDetail>>(Edit
     })
   }
 
-  fetchUsersById(q: string): Promise<any[]> {
-    const result = new Promise<any[]>((resolve, reject) => {
+  fetchCounselorsById(q: string): Promise<IUserData[]> {
+    const result = new Promise<IUserData[]>((resolve, reject) => {
       getUsers({
         id__in: q,
         page_size: 20,

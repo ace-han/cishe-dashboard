@@ -346,8 +346,8 @@ export default class extends Mixins<EditPartMixin<IContractData>>(EditPartMixin)
     return result
   }
 
-  fetchCustomersById(q: string): Promise<any[]> {
-    const result = new Promise<any[]>((resolve, reject) => {
+  fetchCustomersById(q: string): Promise<ICustomerData[]> {
+    const result = new Promise<ICustomerData[]>((resolve, reject) => {
       getCustomers({
         id__in: q,
         page_size: 20,
