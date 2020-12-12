@@ -62,7 +62,10 @@ export default class FetchDataMixin<T> extends Vue {
 
   protected normalizeRouteQuery() {
     const params = this.$route.query
-    const result: Dictionary<any> = {}
+    const result: Dictionary<any> = {
+      // avoid queryParams default values not get along
+      ...this.queryParams
+    }
     for (const [k, v] of Object.entries(params)) {
       if (!v) {
         // don't do anything
