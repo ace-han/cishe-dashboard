@@ -62,7 +62,8 @@
             model-class-path="cishe.contract.models.ServiceInfo"
             model-field-path="target_country_code"
             allow-create
-            :multiple="true"
+            multiple
+            :format-items="formCSVItems"
           />
         </el-form-item>
         <el-form-item
@@ -99,7 +100,8 @@
             model-class-path="cishe.contract.models.ServiceInfo"
             model-field-path="target_major"
             allow-create
-            :multiple="true"
+            multiple
+            :format-items="formCSVItems"
           />
         </el-form-item>
         <el-form-item
@@ -352,6 +354,19 @@ export default class extends Mixins<EditPartMixin<IContractDataWithDetail>>(Edit
       target_major: this.form.target_major.join(',')
     }
     console.info('service-part serialize', result)
+    return result
+  }
+
+  formCSVItems(items: string[]) : string[] {
+    const result: string[] = []
+    for (const item of items) {
+      for (const v of item.split(',')) {
+        if (result.includes(v)) {
+          continue
+        }
+        result.push(v)
+      }
+    }
     return result
   }
 }

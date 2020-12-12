@@ -32,25 +32,34 @@ type ValueType = number|string
 @Component({
   name: 'ModelFieldValuesSelect'
 })
-export default class extends Vue {
+export default class ModelFieldValuesSelect extends Vue {
   @Prop({ required: true }) readonly modelClassPath!: string
   @Prop({ required: true }) readonly modelFieldPath!: string
   @Prop({ default: '' }) readonly value!: ValueType
   @Prop({ default: false }) readonly multiple!: boolean
   @Prop({ default: false }) readonly allowCreate!: boolean
   @Prop({ default: () => ({}) }) readonly selectStyle!: () => CSSStyleDeclaration
+  @Prop({
+    default(this: ModelFieldValuesSelect) {
+      return (items: ValueType[]) : ValueType[] => {
+        const result: ValueType[] = []
+        for (const item of items) {
+          if (!item && item !== 0) {
+            continue
+          }
+          result.push(item)
+        }
+        return result
+      }
+    }
+  })
+  readonly formatItems!: (items: ValueType[]) => ValueType[]
 
   private loading = false
   private items: ValueType[] = []
 
   get optionItems() {
-    const result: ValueType[] = []
-    for (const item of this.items) {
-      if (!item && item !== 0) {
-        continue
-      }
-      result.push(item)
-    }
+    const result = this.formatItems(this.items)
     return result
   }
 

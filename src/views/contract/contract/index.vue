@@ -26,51 +26,78 @@
       >
         <el-row>
           <el-form-item label="学生名字">
-            <el-input
-              v-model="queryParams.name__icontains"
-              clearable
-              placeholder="模糊匹配"
-              @keyup.enter.native="submit"
+            <model-select
+              v-model="queryParams.customer__name__in"
+              url="/fev1/contract/customers/"
+              :params="{fields: 'id,name,phone_num'}"
+              :format-item="(item) => ({
+                value: item.name,
+                label: `${item.name} (${item.phone_num})`,
+                object: item
+              })"
+              :init-func="fetchCustomersByName"
+            />
+          </el-form-item>
+          <el-form-item label="申请季">
+            <model-field-values-select
+              v-model="queryParams.serviceinfo__enrollment_semester__in"
+              model-class-path="cishe.contract.models.ServiceInfo"
+              model-field-path="enrollment_semester"
+              allow-create
+              multiple
             />
           </el-form-item>
           <el-form-item label="申请国家">
-            <el-input
-              v-model="queryParams.name__icontains"
-              clearable
-              placeholder="模糊匹配"
-              @keyup.enter.native="submit"
+            <model-field-values-select
+              v-model="queryParams.serviceinfo__target_country_code__oricontains"
+              model-class-path="cishe.contract.models.ServiceInfo"
+              model-field-path="target_country_code"
+              allow-create
+              multiple
+              :format-items="formCSVItems"
             />
           </el-form-item>
           <el-form-item label="申请专业">
-            <el-input
-              v-model="queryParams.name__icontains"
+            <model-field-values-select
+              v-model="queryParams.serviceinfo__target_major__oricontains"
+              model-class-path="cishe.contract.models.ServiceInfo"
+              model-field-path="enrollment_semester"
+              allow-create
+              multiple
+              :format-items="formCSVItems"
+            />
+          </el-form-item>
+          <el-form-item label="咨询师">
+            <model-select
+              v-model="queryParams.last_counselor__username__in"
+              url="/fev1/account/users/"
+              :params="{fields: 'id,username,first_name,last_name'}"
+              :format-item="(item) => ({
+                value: item.username,
+                label: `${item.first_name} ${item.last_name} (${item.username})`,
+                object: item
+              })"
+              :init-func="fetchCounselorsByUsername"
+            />
+          </el-form-item>
+          <el-form-item label="签约日期">
+            <el-date-picker
+              v-model="queryParams.signing_date__range"
+              type="daterange"
               clearable
-              placeholder="模糊匹配"
-              @keyup.enter.native="submit"
+              start-placeholder="From"
+              end-placeholder="To"
+              value-format="yyyy-MM-dd HH:mm:ss"
             />
           </el-form-item>
           <el-form-item label="策划期">
-            <el-input
-              v-model="queryParams.name__icontains"
+            <el-date-picker
+              v-model="queryParams.probation_until__range"
+              type="daterange"
               clearable
-              placeholder="模糊匹配"
-              @keyup.enter.native="submit"
-            />
-          </el-form-item>
-          <el-form-item label="签约人员">
-            <el-input
-              v-model="queryParams.name__icontains"
-              clearable
-              placeholder="模糊匹配"
-              @keyup.enter.native="submit"
-            />
-          </el-form-item>
-          <el-form-item label="合同价格">
-            <el-input
-              v-model="queryParams.name__icontains"
-              clearable
-              placeholder="模糊匹配"
-              @keyup.enter.native="submit"
+              start-placeholder="From"
+              end-placeholder="To"
+              value-format="yyyy-MM-dd HH:mm:ss"
             />
           </el-form-item>
         </el-row>
@@ -165,7 +192,7 @@
               :href="`/#/contract/customers?name__icontains=${ row.customer.name }}`"
               target="_blank"
             >
-              {{ row.customer.name }} ({{ row.customer.id }})
+              {{ row.customer.name }} ({{ row.customer.phone_num }})
             </el-link>
           </template>
         </el-table-column>
@@ -403,25 +430,37 @@
 
 <script lang="ts">
 import _ from 'lodash'
+import moment from 'moment'
 import { Component, Mixins } from 'vue-property-decorator'
 import { createContract, deleteContracts, getContracts, partialUpdateContract } from '@/api/contracts'
-import { IContractDataWithDetail, IUserData } from '@/api/types'
+import { IContractDataWithDetail, ICustomerData, IUserData } from '@/api/types'
 import Pagination from '@/components/Pagination/index.vue'
 import FetchDataMixin from '@/views/mixins/list-search'
 import { Dictionary } from 'vue-router/types/router'
 import { getUsers } from '@/api/users'
 import { ElForm } from 'element-ui/types/form'
 import { TransferData } from 'element-ui/types/transfer'
+import { getCustomers } from '@/api/customers'
+import ModelFieldValuesSelect from '@/components/ModelFieldValuesSelect/index.vue'
+import ModelSelect from '@/components/ModelSelect/index.vue'
 
 @Component({
   components: {
-    Pagination
+    Pagination,
+    ModelFieldValuesSelect,
+    ModelSelect
   }
 })
 class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(FetchDataMixin) {
   protected watchRouteQueryChange = true
   protected queryParams: Dictionary<any> = {
-    customer__in: [] as string[]
+    customer__name__in: [] as string[],
+    serviceinfo__enrollment_semester__in: [] as string[],
+    serviceinfo__target_country_code__oricontains: [] as string[],
+    serviceinfo__target_major__oricontains: [] as string[],
+    last_counselor__username__in: [] as string[],
+    signing_date__range: [] as string[],
+    probation_until__range: [] as string[]
   }
 
   private formDialogVisible = false
@@ -721,6 +760,51 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
 
   onAllExport() {
     console.info('onAllExport')
+  }
+
+  fetchCounselorsByUsername(q: string): Promise<any[]> {
+    const result = new Promise<any[]>((resolve, reject) => {
+      getUsers({
+        id__in: q,
+        page_size: 20,
+        fields: 'id,username,first_name,last_name'
+      }).then(({ data }) => {
+        resolve(data.results)
+      }).catch((err: any) => {
+        reject(err)
+        this.$notify.error('获取咨询师失败')
+      })
+    })
+    return result
+  }
+
+  fetchCustomersByName(q: string): Promise<ICustomerData[]> {
+    const result = new Promise<ICustomerData[]>((resolve, reject) => {
+      getCustomers({
+        id__in: q,
+        page_size: 20,
+        fields: 'id,name,phone_num'
+      }).then(({ data }) => {
+        resolve(data.results)
+      }).catch((err: any) => {
+        reject(err)
+        this.$notify.error('获取学生失败')
+      })
+    })
+    return result
+  }
+
+  formCSVItems(items: string[]) : string[] {
+    const result: string[] = []
+    for (const item of items) {
+      for (const v of item.split(',')) {
+        if (result.includes(v)) {
+          continue
+        }
+        result.push(v)
+      }
+    }
+    return result
   }
 }
 
