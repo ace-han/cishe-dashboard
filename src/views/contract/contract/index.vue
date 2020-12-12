@@ -186,6 +186,11 @@
           label="ID"
         />
         <el-table-column
+          v-if="colKeyOptionInfoMap['contract_num'].selected"
+          property="contract_num"
+          label="合同编号"
+        />
+        <el-table-column
           v-if="colKeyOptionInfoMap['cutomer.name'].selected"
           label="学生名字"
         >
@@ -305,11 +310,6 @@
           label="合同类型"
         />
         <el-table-column
-          v-if="colKeyOptionInfoMap['contract_num'].selected"
-          property="contract_num"
-          label="合同编号"
-        />
-        <el-table-column
           v-if="colKeyOptionInfoMap['source'].selected"
           property="source"
           label="客户来源"
@@ -414,6 +414,20 @@
             </el-button>
             <el-button
               size="small"
+              icon="el-icon-user"
+              @click="onItemTransfer(row)"
+            >
+              交接
+            </el-button>
+            <el-button
+              size="small"
+              icon="el-icon-document-copy"
+              @click="onItemCopy(row)"
+            >
+              复制
+            </el-button>
+            <el-button
+              size="small"
               icon="el-icon-delete"
               @click="onItemDelete(row)"
             >
@@ -431,7 +445,7 @@
       />
     </el-card>
     <el-dialog
-      :title="form.title"
+      title="交接"
       :visible.sync="formDialogVisible"
       width="60%"
     >
@@ -442,29 +456,48 @@
         :rules="rules"
       >
         <el-form-item
-          label="组名"
-          prop="name"
+          label="合同编号"
         >
           <el-input
-            v-model="form.name"
+            v-model="form.contract_num"
             type="text"
-            placeholder="组名"
-            maxlength="150"
-            show-word-limit
+            disabled
           />
         </el-form-item>
         <el-form-item
-          label="成员"
-          prop="usernames"
+          label="咨询师"
+          prop="counselor"
         >
-          <el-transfer
-            v-model="form.users"
-            v-loading="formUsersLoading"
-            filterable
-            filter-placeholder="模糊匹配"
-            :titles="['Source', 'Target']"
-            :filter-method="filterMethod"
-            :data="userOptions"
+          <model-select
+            v-model="form.counselor"
+            :select-style="{width: '100%'}"
+            url="/fev1/account/users/"
+            :params="{fields: 'id,username,first_name,last_name'}"
+            :format-item="(item) => ({
+              value: item.id,
+              label: `${item.first_name} ${item.last_name} (${item.username})`,
+              object: item
+            })"
+          />
+        </el-form-item>
+        <el-form-item
+          label="备注"
+          prop="remark"
+        >
+          <el-input
+            v-model="form.remark"
+            clearable
+            placeholder="备注内容"
+            type="textarea"
+            :autosize="{minRows: 3, maxRows: 6}"
+          />
+        </el-form-item>
+        <el-form-item
+          prop="contract"
+        >
+          <el-input
+            v-model="form.contract"
+            type="hidden"
           />
         </el-form-item>
       </el-form>
@@ -486,7 +519,7 @@
 import _ from 'lodash'
 import moment from 'moment'
 import { Component, Mixins } from 'vue-property-decorator'
-import { createContract, deleteContracts, getContracts, partialUpdateContract } from '@/api/contracts'
+import { deleteContracts, getContracts } from '@/api/contracts'
 import { IContractDataWithDetail, ICustomerData, IUserData } from '@/api/types'
 import Pagination from '@/components/Pagination/index.vue'
 import FetchDataMixin from '@/views/mixins/list-search'
@@ -497,6 +530,7 @@ import { TransferData } from 'element-ui/types/transfer'
 import { getCustomers } from '@/api/customers'
 import ModelFieldValuesSelect from '@/components/ModelFieldValuesSelect/index.vue'
 import ModelSelect from '@/components/ModelSelect/index.vue'
+import { createTakeOver } from '@/api/takeovers'
 
 @Component({
   components: {
@@ -520,24 +554,42 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
 
   private formDialogVisible = false
   private form = {
-    title: '创建',
-    id: 0,
     contract_num: '',
-    contract_type: '',
-    source: '',
-    signing_date: '',
-    signing_branch: '',
-    sale_agent: 0,
-    probation_until: '',
-    total_amount: 0,
-    referrer: '',
-    supplementary_agreement: ''
+    contract: 0,
+    counselor: 0 || '',
+    remark: ''
   }
 
   private rules = {
-    name: [
-      { required: true, trigger: 'blur' },
-      { min: 1, max: 150, message: '最大长度150字符', trigger: 'change' }
+    contract: [
+      { type: 'number', required: true, trigger: 'blur' },
+      { type: 'number', min: 1, message: 'should greater than 0', trigger: 'input' }
+    ],
+    counselor: [
+      {
+        validator: (rule: Dictionary<any>, value: string | number) => {
+          const errors = []
+          if (!value) {
+            errors.push(new Error('counselor is required'))
+          }
+          if (isNaN((value as number))) {
+            errors.push(new Error('counselor is not a number'))
+          }
+
+          // do not follow async-validator doc, trust debugging
+          // return errors
+          // callback(errors)
+          if (errors.length) {
+            return Promise.reject(errors)
+          } else {
+            return Promise.resolve()
+          }
+        },
+        trigger: 'blur'
+      }
+    ],
+    remark: [
+      { max: 2000, message: '最大长度2000字符', trigger: 'change' }
     ]
   }
 
@@ -552,6 +604,10 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
     id: {
       label: 'ID',
       selected: false
+    },
+    contract_num: {
+      label: '合同编号',
+      selected: true
     },
     'cutomer.name': {
       label: '学生姓名',
@@ -587,10 +643,6 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
     },
     contract_type: {
       label: '合同类型',
-      selected: false
-    },
-    contract_num: {
-      label: '合同编号',
       selected: false
     },
     source: {
@@ -817,38 +869,6 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
     return item.label.toLowerCase().indexOf(term.toLowerCase()) > -1
   }
 
-  submitForm() {
-    (this.$refs.form as ElForm).validate((valid: boolean) => {
-      if (valid) {
-        const params = Object.assign({}, this.form)
-        const loading = this.$loading({
-          lock: true
-        })
-        let promise
-        if (this.form.id) {
-          // put
-          promise = partialUpdateContract(params.id, params)
-        } else {
-          // create
-          promise = createContract(params)
-        }
-        promise.then(() => {
-          this.$notify.success('操作成功')
-          this.fetchData()
-          this.formDialogVisible = false
-        }).catch((err: any) => {
-          console.error(err)
-          this.$notify.error('操作失败')
-        }).finally(() => {
-          loading.close()
-        })
-      } else {
-        this.$notify.warning('请正确填写表格')
-        return false
-      }
-    })
-  }
-
   onColumnsChange(selectedColKeys: string[]) {
     for (const optionInfo of Object.values(this.colKeyOptionInfoMap)) {
       optionInfo.selected = false
@@ -910,6 +930,51 @@ class ContractList extends Mixins<FetchDataMixin<IContractDataWithDetail>>(Fetch
       }
     }
     return result
+  }
+
+  onItemCopy(item: IContractDataWithDetail) {
+    this.$router.push({
+      name: 'ContractContractCreate',
+      query: { copy: item.id + '' }
+    })
+  }
+
+  onItemTransfer(item: IContractDataWithDetail) {
+    this.form = {
+      contract_num: item.contract_num,
+      contract: item.id || 0,
+      counselor: 0 || '',
+      remark: ''
+    }
+    this.formDialogVisible = true
+  }
+
+  submitForm() {
+    (this.$refs.form as ElForm).validate((valid: boolean) => {
+      if (valid) {
+        const params: Dictionary<any> = {
+          ...this.form,
+          transfer_date: moment.utc().format()
+        }
+        delete params.contract_num
+        const loading = this.$loading({
+          lock: true
+        })
+        createTakeOver(params).then(() => {
+          this.$notify.success('操作成功')
+          this.fetchData()
+          this.formDialogVisible = false
+        }).catch((err: any) => {
+          console.error(err)
+          this.$notify.error('操作失败')
+        }).finally(() => {
+          loading.close()
+        })
+      } else {
+        this.$notify.warning('请正确填写表格')
+        return false
+      }
+    })
   }
 }
 

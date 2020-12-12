@@ -58,7 +58,6 @@ export default class ModelSelect extends Vue {
   @Prop({
     default(this: ModelSelect) {
       return (q: string): Promise<any[]> => {
-        console.warn('abc')
         const result = new Promise<any[]>((resolve, reject) => {
           this.loading = true
           // this is request.get<T,R> should be used with response interceptor
@@ -66,7 +65,7 @@ export default class ModelSelect extends Vue {
           request.get<ListResponse<any>>(this.url, {
             params: {
               ...this.params,
-              search: q,
+              search: q || '',
               page_size: 20
             }
           }).then(({ data }) => {

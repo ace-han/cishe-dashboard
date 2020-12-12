@@ -13,3 +13,7 @@ export const deleteTakeOvers = (params: any): Promise<AxiosResponse<DeleteRespon
     params
   })
 }
+
+export const createTakeOver = (data: any): Promise<AxiosResponse<ITakeOverData>> => {
+  return requestService.post<ITakeOverData>('/fev1/contract/takeovers/', data)
+}
