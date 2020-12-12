@@ -150,8 +150,8 @@ export default class extends Vue {
   }
 
   private moveToCurrentTag() {
-    const tags = this.$refs.tag as any[] // TODO: better typescript support for router-link
     this.$nextTick(() => {
+      const tags = this.$refs.tag as any[] // TODO: better typescript support for router-link
       for (const tag of tags) {
         if ((tag.to as ITagView).path === this.$route.path) {
           (this.$refs.scrollPane as ScrollPane).moveToTarget(tag as any)
