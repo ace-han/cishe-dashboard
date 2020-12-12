@@ -8,11 +8,11 @@
     >
       <el-form-item
         label="咨询师"
-        prop="staff"
+        prop="counselor"
         :required="isItemCreation"
       >
         <model-select
-          v-model="form.staff"
+          v-model="form.counselor"
           :select-style="{width: '100%'}"
           url="/fev1/account/users/"
           :params="{fields: 'id,username,first_name,last_name'}"
@@ -60,7 +60,7 @@
         label="咨询师"
       >
         <template slot-scope="{row}">
-          {{ row.staff.first_name }} ({{ row.staff.username }})
+          {{ row.counselor.first_name }} ({{ row.counselor.username }})
         </template>
       </el-table-column>
       <el-table-column
@@ -113,27 +113,27 @@ import { deleteTakeOvers, getTakeOvers } from '@/api/takeovers'
 export default class extends Mixins<EditPartMixin<IContractDataWithDetail>>(EditPartMixin) implements AbstractEditPart {
   @Prop({ required: true }) readonly historyEnabled!: boolean
   protected form: Dictionary<any> = {
-    staff: '',
+    counselor: '',
     contract: '',
     transfer_date: '',
     remark: ''
   }
 
   private rules = {
-    staff: [
+    counselor: [
       {
         validator: (rule: Dictionary<any>, value: string | number) => {
           const errors = []
           if (this.isItemCreation) {
             if (!value) {
-              errors.push(new Error('staff is required'))
+              errors.push(new Error('counselor is required'))
             }
             if (isNaN((value as number))) {
-              errors.push(new Error('staff is not a number'))
+              errors.push(new Error('counselor is not a number'))
             }
           } else {
             if (value && isNaN((value as number))) {
-              errors.push(new Error('staff is not a number'))
+              errors.push(new Error('counselor is not a number'))
             }
           }
           // do not follow async-validator doc, trust debugging
@@ -166,7 +166,7 @@ export default class extends Mixins<EditPartMixin<IContractDataWithDetail>>(Edit
         const params = {
           contract: this.item.id,
           page_size: 999,
-          expand: 'staff',
+          expand: 'counselor',
           ordering: '-transfer_date'
         }
         getTakeOvers(params).then(({ data }) => {
@@ -226,7 +226,7 @@ export default class extends Mixins<EditPartMixin<IContractDataWithDetail>>(Edit
     const selected = [] as number[]
     for (const record of records) {
       selected.push(record.id || 0)
-      content.push(`${(record.staff as IUserData).username}(${record.id})`)
+      content.push(`${(record.counselor as IUserData).username}(${record.id})`)
     }
 
     this.$confirm(content.join('<br/>'), '确认', {

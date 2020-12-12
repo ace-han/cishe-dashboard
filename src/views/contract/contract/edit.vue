@@ -278,7 +278,7 @@ export default class ContractContractEdit extends Vue {
 
       Object.assign(contract, parts[0])
       Object.assign(serviceinfo, parts[1])
-      if (parts[2].staff) {
+      if (parts[2].counselor) {
         Object.assign(takeover, parts[2])
       }
 
