@@ -66,6 +66,11 @@
           取消
         </el-button>
       </el-button-group>
+      <comment-list
+        app-label="contract"
+        model="contract"
+        :object-id="id"
+      />
     </el-main>
   </el-container>
 </template>
@@ -81,6 +86,8 @@ import TakeoverPart from '@/views/contract/contract/takeover-part.vue'
 import { IContractDataWithDetail } from '@/api/types'
 import { AbstractEditPart } from '@/views/mixins/edit-part'
 import { getContracts, partialUpdateContract } from '@/api/contracts'
+
+import CommentList from '@/views/contract/contract/comment-list.vue'
 
 const DEFAULT_ITEM = {
   id: 0,
@@ -112,38 +119,12 @@ const DEFAULT_ITEM = {
   }
 }
 
-// function fetchContract(id: number | string): Promise<IContractDataWithDetail> {
-//   const loading = Loading.service({
-//     lock: true
-//   })
-//   const result = new Promise<IContractDataWithDetail>((resolve, reject) => {
-//     getContracts({
-//       id: id,
-//       expand: 'serviceinfo,takeovers',
-//       page: 1,
-//       page_size: 1
-//     }).then(({ data }) => {
-//       if (data.results.length) {
-//         resolve(data.results[0])
-//       } else {
-//         reject(new Error(`Contract ID: '${id}' doest not exist`))
-//       }
-//     }).catch((err: any) => {
-//       console.error(err)
-//       Notification.error('获取合同信息失败')
-//       reject(err)
-//     }).finally(() => {
-//       loading.close()
-//     })
-//   })
-//   return result
-// }
-
 @Component({
   components: {
     BasicPart,
     ServicePart,
-    TakeoverPart
+    TakeoverPart,
+    CommentList
   }
 })
 export default class ContractContractEdit extends Vue {
@@ -164,28 +145,6 @@ export default class ContractContractEdit extends Vue {
   }
 
   item: IContractDataWithDetail = DEFAULT_ITEM
-
-  // beforeRouteEnter(to: any, from: any, next: any) {
-  //   fetchContract(to.params.id).then((item) => {
-  //     next((vm: ContractContractEdit) => {
-  //       vm.item = item
-  //     })
-  //   }).catch(() => {
-  //     // should navi to list view
-  //     next({ name: 'ContractContracts' })
-  //   })
-  // }
-
-  // beforeRouteUpdate(to: any, from: any, next: any) {
-  //   this.item = DEFAULT_ITEM
-  //   fetchContract(to.params.id).then((item) => {
-  //     this.item = item
-  //     next()
-  //   }).catch(() => {
-  //     // should navi to list view
-  //     next({ name: 'ContractContracts' })
-  //   })
-  // }
 
   mounted() {
     this.init()

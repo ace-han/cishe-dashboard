@@ -103,3 +103,13 @@ export interface ITakeOverData {
 export interface IContractDataWithDetail extends IContractData {
   serviceinfo: IServiceInfoData
 }
+
+export interface ICommentData extends IdObject {
+  'content_type': number
+  'object_id': number
+  comment: string
+  'commented_by': string
+  'commented_user': IUserData
+  'submitted_at': string
+  removed: boolean
+}
